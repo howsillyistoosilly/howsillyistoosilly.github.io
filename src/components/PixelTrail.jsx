@@ -1,15 +1,12 @@
 /* eslint-disable react/no-unknown-property */
 import { useEffect, useMemo, useRef, useState, memo } from 'react'
-import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { shaderMaterial } from '@react-three/drei'
+import { Canvas, useThree } from '@react-three/fiber'
+import { shaderMaterial, useTrailTexture } from '@react-three/drei'
 import * as THREE from 'three'
-import { useViewport } from '../context/ViewportContext'
 import { WebGLPerfCollector } from './PerfMonitor'
 import './PixelTrail.css'
 
-const TRAIL_COUNT = 24
-
-// --- 100% GPU-Native Pixel Trail GLSL Shader -----------------------------
+// --- Exact Original Discrete Retro Block Shader (1:1 Cursor Alignment) ---
 
 const VERTEX_SHADER = `
   void main() {
@@ -18,117 +15,89 @@ const VERTEX_SHADER = `
 `
 
 const FRAGMENT_SHADER = `
-  uniform vec2 uResolution;
-  uniform float uGridSize;
-  uniform vec3 uPixelColor;
-  uniform vec3 uTrail[${TRAIL_COUNT}]; // x: uv.x, y: uv.y, z: alpha/age (1.0 to 0.0)
-  uniform float uTrailRadius;
+  uniform vec2 resolution;
+  uniform sampler2D mouseTrail;
+  uniform float gridSize;
+  uniform vec3 pixelColor;
 
   void main() {
-    // Screen UV (0.0 to 1.0)
-    vec2 screenUv = gl_FragCoord.xy / uResolution;
+    // 1:1 Direct viewport screen UV (0.0 to 1.0)
+    vec2 screenUv = gl_FragCoord.xy / resolution;
 
-    // Aspect-ratio correction factor for circular distance math
-    vec2 aspect = vec2(1.0, uResolution.y / uResolution.x);
-
-    // Discrete aspect-correct pixel grid cell center
-    vec2 aspectGrid = vec2(uGridSize, uGridSize * (uResolution.y / uResolution.x));
+    // Aspect-ratio square grid cell center
+    vec2 aspectGrid = vec2(gridSize, gridSize * (resolution.y / resolution.x));
     vec2 cellCenter = (floor(screenUv * aspectGrid) + 0.5) / aspectGrid;
-    vec2 cellCenterAspect = cellCenter * aspect;
 
-    float maxTrailStrength = 0.0;
-
-    for (int i = 0; i < ${TRAIL_COUNT}; i++) {
-      vec3 pt = uTrail[i];
-      if (pt.z <= 0.001) continue;
-
-      vec2 ptAspect = pt.xy * aspect;
-      float dist = distance(cellCenterAspect, ptAspect);
-
-      // Discrete step cutoff matching original sharp pixel block look (0% flashlight spotlight glow!)
-      float radius = uTrailRadius * (0.4 + 0.6 * pt.z);
-      float floatFactor = step(dist, radius);
-      
-      float trailStrength = floatFactor * pt.z;
-      maxTrailStrength = max(maxTrailStrength, trailStrength);
-    }
-
-    gl_FragColor = vec4(uPixelColor, maxTrailStrength);
+    // Sample continuous interpolated trail texture at discrete cell center
+    float trailStrength = texture2D(mouseTrail, cellCenter).r;
+    gl_FragColor = vec4(pixelColor, trailStrength);
   }
 `
 
-const GpuTrailMaterial = shaderMaterial(
+const DotMaterial = shaderMaterial(
   {
-    uResolution: new THREE.Vector2(),
-    uGridSize: 150,
-    uPixelColor: new THREE.Color('#ffffff'),
-    uTrailRadius: 0.035,
-    uTrail: Array.from({ length: TRAIL_COUNT }, () => new THREE.Vector3(-10, -10, 0)),
+    resolution: new THREE.Vector2(),
+    mouseTrail: null,
+    gridSize: 100,
+    pixelColor: new THREE.Color('#ffffff'),
   },
   VERTEX_SHADER,
   FRAGMENT_SHADER
 )
 
-function GpuTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor, onWebGLStats }) {
+// Static pre-allocated payload object (zero GC memory allocations!)
+const MOVE_PAYLOAD = { uv: { x: 0, y: 0 } }
+
+function TrailPlane({ gridSize, trailSize, maxAge, interpolate, easingFunction, pixelColor, onWebGLStats }) {
   const { width, height } = useThree(s => s.size)
   const viewport = useThree(s => s.viewport)
-  const { mouseRef } = useViewport()
 
-  const material = useMemo(() => new GpuTrailMaterial(), [])
+  const material = useMemo(() => new DotMaterial(), [])
   const colorObj = useMemo(() => new THREE.Color(pixelColor), [pixelColor])
   
   const resolutionVec = useMemo(() => {
     return new THREE.Vector2(width * viewport.dpr, height * viewport.dpr)
   }, [width, height, viewport.dpr])
 
-  // Static pre-allocated ring buffer of Vector3 objects (zero GC memory allocations!)
-  const trailArray = useMemo(() => {
-    return Array.from({ length: TRAIL_COUNT }, () => new THREE.Vector3(-10, -10, 0))
-  }, [])
-
-  const writeHeadRef = useRef(0)
-  const lastMouseRef = useRef({ x: -1, y: -1 })
-  const lastTimeRef = useRef(performance.now())
-
-  useFrame((_, delta) => {
-    const now = performance.now()
-    const dt = Math.min(delta, 0.1)
-
-    // Fade active trail points smoothly on the GPU ring buffer
-    const decayRate = Math.pow(0.01, dt / (maxAge / 1000))
-    for (let i = 0; i < TRAIL_COUNT; i++) {
-      if (trailArray[i].z > 0.001) {
-        trailArray[i].z *= decayRate
-        if (trailArray[i].z < 0.001) trailArray[i].z = 0
-      }
-    }
-
-    // Push new point into ring buffer ONLY when cursor moves > 0.5px
-    if (mouseRef.current) {
-      const mx = mouseRef.current.x
-      const my = mouseRef.current.y
-
-      const dx = mx - lastMouseRef.current.x
-      const dy = my - lastMouseRef.current.y
-      const distSq = dx * dx + dy * dy
-
-      if (distSq > 0.25 || (now - lastTimeRef.current > 50 && distSq > 0)) {
-        lastMouseRef.current.x = mx
-        lastMouseRef.current.y = my
-        lastTimeRef.current = now
-
-        const head = writeHeadRef.current
-        trailArray[head].set(
-          mx / window.innerWidth,
-          1 - (my / window.innerHeight),
-          1.0
-        )
-        writeHeadRef.current = (head + 1) % TRAIL_COUNT
-      }
-    }
-
-    material.uniforms.uTrail.value = trailArray
+  // Drei useTrailTexture with interpolate: 8 creates smooth continuous stroke lines between mouse points
+  const [trail, onMove] = useTrailTexture({
+    size: 512,
+    radius: trailSize,
+    maxAge,
+    interpolate: interpolate || 8,
+    ease: easingFunction || (t => t),
   })
+
+  useEffect(() => {
+    if (!trail) return
+    trail.minFilter = THREE.NearestFilter
+    trail.magFilter = THREE.NearestFilter
+    trail.wrapS = THREE.ClampToEdgeWrapping
+    trail.wrapT = THREE.ClampToEdgeWrapping
+  }, [trail])
+
+  // Direct mouse movement listener that ONLY fires when cursor actually moves (0 RAF CPU overhead when stationary)
+  useEffect(() => {
+    let lastX = -1
+    let lastY = -1
+
+    const handlePointerMove = (e) => {
+      const cx = e.clientX
+      const cy = e.clientY
+      if (cx === lastX && cy === lastY) return
+      lastX = cx
+      lastY = cy
+
+      MOVE_PAYLOAD.uv.x = cx / window.innerWidth
+      MOVE_PAYLOAD.uv.y = 1 - (cy / window.innerHeight)
+      onMove(MOVE_PAYLOAD)
+    }
+
+    window.addEventListener('mousemove', handlePointerMove, { passive: true })
+    return () => window.removeEventListener('mousemove', handlePointerMove)
+  }, [onMove])
+
+  if (!trail) return null
 
   const scale = Math.max(viewport.width, viewport.height) / 2
 
@@ -139,10 +108,10 @@ function GpuTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor, onWebGLS
         <planeGeometry args={[2, 2]} />
         <primitive
           object={material}
-          uGridSize={gridSize}
-          uPixelColor={colorObj}
-          uResolution={resolutionVec}
-          uTrailRadius={trailSize}
+          gridSize={gridSize}
+          pixelColor={colorObj}
+          resolution={resolutionVec}
+          mouseTrail={trail}
         />
       </mesh>
     </>
@@ -153,6 +122,8 @@ function PixelTrailComponent({
   gridSize = 150,
   trailSize = 0.035,
   maxAge = 400,
+  interpolate = 8,
+  easingFunction = (t) => t,
   color = '#f0f0f0',
   onWebGLStats = () => {},
 }) {
@@ -215,10 +186,12 @@ function PixelTrailComponent({
         }}
         onCreated={handleCreated}
       >
-        <GpuTrailPlane
+        <TrailPlane
           gridSize={gridSize}
           trailSize={trailSize}
           maxAge={maxAge}
+          interpolate={interpolate}
+          easingFunction={easingFunction}
           pixelColor={color}
           onWebGLStats={onWebGLStats}
         />
