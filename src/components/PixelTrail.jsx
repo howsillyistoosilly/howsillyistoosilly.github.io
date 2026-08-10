@@ -1,14 +1,11 @@
 /* eslint-disable react/no-unknown-property */
-import { useEffect, useMemo, useRef, useState, memo } from 'react'
-import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { shaderMaterial } from '@react-three/drei'
+import { useEffect, useMemo, useState, memo } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
+import { shaderMaterial, useTrailTexture } from '@react-three/drei'
 import * as THREE from 'three'
-import { useViewport } from '../context/ViewportContext'
 import './PixelTrail.css'
 
-const TRAIL_COUNT = 24
-
-// --- Pure GPU Shader --------------------------------------------------
+// --- Shader (Exact original coverUv & pixel grid quantization) ----------
 
 const VERTEX_SHADER = `
   void main() {
@@ -17,108 +14,78 @@ const VERTEX_SHADER = `
 `
 
 const FRAGMENT_SHADER = `
-  uniform vec2 uResolution;
-  uniform float uGridSize;
-  uniform vec3 uPixelColor;
-  uniform vec3 uTrail[${TRAIL_COUNT}]; // x: uv.x, y: uv.y, z: alpha/age (1.0 to 0.0)
-  uniform float uTrailRadius;
+  uniform vec2 resolution;
+  uniform sampler2D mouseTrail;
+  uniform float gridSize;
+  uniform vec3 pixelColor;
+
+  vec2 coverUv(vec2 uv) {
+    vec2 s = resolution.xy / max(resolution.x, resolution.y);
+    vec2 adjusted = (uv - 0.5) * s + 0.5;
+    return clamp(adjusted, 0.0, 1.0);
+  }
 
   void main() {
-    vec2 screenUv = gl_FragCoord.xy / uResolution;
-    vec2 cellCenter = (floor(screenUv * uGridSize) + 0.5) / uGridSize;
-    
-    vec2 aspect = vec2(uResolution.x / min(uResolution.x, uResolution.y), uResolution.y / min(uResolution.x, uResolution.y));
-    vec2 cellCenterAspect = cellCenter * aspect;
-
-    float trailStrength = 0.0;
-
-    for (int i = 0; i < ${TRAIL_COUNT}; i++) {
-      vec3 pt = uTrail[i];
-      if (pt.z <= 0.001) continue;
-      
-      vec2 ptAspect = pt.xy * aspect;
-      float dist = distance(cellCenterAspect, ptAspect);
-      
-      // Sharp pixel grid cell activation matching original step threshold
-      float radius = uTrailRadius * (0.35 + 0.65 * pt.z);
-      if (dist < radius) {
-        float cellAlpha = (1.0 - (dist / radius)) * pt.z;
-        trailStrength = max(trailStrength, cellAlpha);
-      }
-    }
-
-    // Step cell strength for discrete retro pixel block rendering (no soft blob gradients!)
-    float discreteAlpha = step(0.08, trailStrength) * (ceil(trailStrength * 6.0) / 6.0);
-
-    vec2 cellUv = fract(screenUv * uGridSize);
-    float edge = min(min(cellUv.x, 1.0 - cellUv.x), min(cellUv.y, 1.0 - cellUv.y));
-    float gridFactor = smoothstep(0.0, 0.04, edge);
-
-    gl_FragColor = vec4(uPixelColor, discreteAlpha * gridFactor);
+    vec2 screenUv = gl_FragCoord.xy / resolution;
+    vec2 uv = coverUv(screenUv);
+    vec2 cellCenter = (floor(uv * gridSize) + 0.5) / gridSize;
+    float trailStrength = texture2D(mouseTrail, cellCenter).r;
+    gl_FragColor = vec4(pixelColor, trailStrength);
   }
 `
 
-const GpuTrailMaterial = shaderMaterial(
+const DotMaterial = shaderMaterial(
   {
-    uResolution: new THREE.Vector2(),
-    uGridSize: 150,
-    uPixelColor: new THREE.Color('#ffffff'),
-    uTrailRadius: 0.035,
-    uTrail: Array.from({ length: TRAIL_COUNT }, () => new THREE.Vector3(0, 0, 0)),
+    resolution: new THREE.Vector2(),
+    mouseTrail: null,
+    gridSize: 100,
+    pixelColor: new THREE.Color('#ffffff'),
   },
   VERTEX_SHADER,
   FRAGMENT_SHADER
 )
 
-function GpuTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor }) {
+function TrailPlane({ gridSize, trailSize, maxAge, interpolate, easingFunction, pixelColor }) {
   const { width, height } = useThree(s => s.size)
   const viewport = useThree(s => s.viewport)
-  const { mouseRef } = useViewport()
 
-  const material = useMemo(() => new GpuTrailMaterial(), [])
+  const material = useMemo(() => new DotMaterial(), [])
   const colorObj = useMemo(() => new THREE.Color(pixelColor), [pixelColor])
   
   const resolutionVec = useMemo(() => {
     return new THREE.Vector2(width * viewport.dpr, height * viewport.dpr)
   }, [width, height, viewport.dpr])
 
-  const trailPointsRef = useRef(
-    Array.from({ length: TRAIL_COUNT }, () => ({ x: 0, y: 0, age: 0 }))
-  )
-  const headIndexRef = useRef(0)
-  const lastMouseRef = useRef({ x: -1, y: -1 })
-
-  useFrame((_, delta) => {
-    if (!mouseRef.current) return
-    const mx = mouseRef.current.x
-    const my = mouseRef.current.y
-
-    const decay = delta * (1000 / maxAge)
-    const points = trailPointsRef.current
-
-    for (let i = 0; i < TRAIL_COUNT; i++) {
-      if (points[i].age > 0) {
-        points[i].age = Math.max(0, points[i].age - decay)
-      }
-    }
-
-    if (Math.abs(mx - lastMouseRef.current.x) > 1 || Math.abs(my - lastMouseRef.current.y) > 1) {
-      lastMouseRef.current.x = mx
-      lastMouseRef.current.y = my
-
-      const idx = headIndexRef.current
-      points[idx].x = mx / window.innerWidth
-      points[idx].y = 1 - (my / window.innerHeight)
-      points[idx].age = 1.0
-
-      headIndexRef.current = (headIndexRef.current + 1) % TRAIL_COUNT
-    }
-
-    const uniforms = material.uniforms.uTrail.value
-    for (let i = 0; i < TRAIL_COUNT; i++) {
-      uniforms[i].set(points[i].x, points[i].y, points[i].age)
-    }
+  const [trail, onMove] = useTrailTexture({
+    size: 512,
+    radius: trailSize,
+    maxAge,
+    interpolate: interpolate || 0.1,
+    ease: easingFunction || (t => t),
   })
+
+  useEffect(() => {
+    if (!trail) return
+    trail.minFilter = THREE.NearestFilter
+    trail.magFilter = THREE.NearestFilter
+    trail.wrapS = THREE.ClampToEdgeWrapping
+    trail.wrapT = THREE.ClampToEdgeWrapping
+  }, [trail])
+
+  useEffect(() => {
+    const handlePointerMove = (e) => {
+      onMove({
+        uv: {
+          x: e.clientX / window.innerWidth,
+          y: 1 - e.clientY / window.innerHeight,
+        },
+      })
+    }
+    window.addEventListener('mousemove', handlePointerMove, { passive: true })
+    return () => window.removeEventListener('mousemove', handlePointerMove)
+  }, [onMove])
+
+  if (!trail) return null
 
   const scale = Math.max(viewport.width, viewport.height) / 2
 
@@ -127,10 +94,10 @@ function GpuTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor }) {
       <planeGeometry args={[2, 2]} />
       <primitive
         object={material}
-        uGridSize={gridSize}
-        uPixelColor={colorObj}
-        uResolution={resolutionVec}
-        uTrailRadius={trailSize}
+        gridSize={gridSize}
+        pixelColor={colorObj}
+        resolution={resolutionVec}
+        mouseTrail={trail}
       />
     </mesh>
   )
@@ -140,6 +107,8 @@ function PixelTrailComponent({
   gridSize = 150,
   trailSize = 0.035,
   maxAge = 400,
+  interpolate = 8,
+  easingFunction = (t) => t,
   color = '#f0f0f0',
 }) {
   const [ready, setReady] = useState(false)
@@ -201,10 +170,12 @@ function PixelTrailComponent({
         }}
         onCreated={handleCreated}
       >
-        <GpuTrailPlane
+        <TrailPlane
           gridSize={gridSize}
           trailSize={trailSize}
           maxAge={maxAge}
+          interpolate={interpolate}
+          easingFunction={easingFunction}
           pixelColor={color}
         />
       </Canvas>
