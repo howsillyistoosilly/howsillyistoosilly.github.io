@@ -3,9 +3,10 @@ import { useEffect, useMemo, useRef, useState, memo } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { shaderMaterial, useTrailTexture } from '@react-three/drei'
 import * as THREE from 'three'
+import { useViewport } from '../context/ViewportContext'
 import './PixelTrail.css'
 
-// --- Exact Original Shader Pipeline ------------------------------------
+// --- Discrete Retro Pixel Block Shader (Direct 1:1 Screen Coordinate Mapping) ---
 
 const VERTEX_SHADER = `
   void main() {
@@ -19,16 +20,15 @@ const FRAGMENT_SHADER = `
   uniform float gridSize;
   uniform vec3 pixelColor;
 
-  vec2 coverUv(vec2 uv) {
-    vec2 s = resolution.xy / max(resolution.x, resolution.y);
-    vec2 adjusted = (uv - 0.5) * s + 0.5;
-    return clamp(adjusted, 0.0, 1.0);
-  }
-
   void main() {
+    // Direct screen space UV (0.0 to 1.0 across full viewport)
     vec2 screenUv = gl_FragCoord.xy / resolution;
-    vec2 uv = coverUv(screenUv);
-    vec2 cellCenter = (floor(uv * gridSize) + 0.5) / gridSize;
+
+    // Aspect-ratio square grid cell calculation
+    vec2 aspectGrid = vec2(gridSize, gridSize * (resolution.y / resolution.x));
+    vec2 cellCenter = (floor(screenUv * aspectGrid) + 0.5) / aspectGrid;
+
+    // Sample trail texture at cell center
     float trailStrength = texture2D(mouseTrail, cellCenter).r;
     gl_FragColor = vec4(pixelColor, trailStrength);
   }
@@ -51,6 +51,7 @@ const MOVE_PAYLOAD = { uv: { x: 0, y: 0 } }
 function TrailPlane({ gridSize, trailSize, maxAge, interpolate, easingFunction, pixelColor }) {
   const { width, height } = useThree(s => s.size)
   const viewport = useThree(s => s.viewport)
+  const { mouseRef } = useViewport()
 
   const material = useMemo(() => new DotMaterial(), [])
   const colorObj = useMemo(() => new THREE.Color(pixelColor), [pixelColor])
@@ -75,35 +76,32 @@ function TrailPlane({ gridSize, trailSize, maxAge, interpolate, easingFunction, 
     trail.wrapT = THREE.ClampToEdgeWrapping
   }, [trail])
 
-  // RAF-throttled pointer listener for high polling rate mice (1000Hz+)
-  const rafId = useRef(null)
-  const mousePos = useRef({ x: 0, y: 0 })
-
+  // Direct mouse updates using shared ViewportContext for zero-lag 1:1 cursor alignment
   useEffect(() => {
-    let pending = false
+    let rafId
+    let lastX = -1
+    let lastY = -1
 
     const updateTrail = () => {
-      MOVE_PAYLOAD.uv.x = mousePos.current.x / window.innerWidth
-      MOVE_PAYLOAD.uv.y = 1 - (mousePos.current.y / window.innerHeight)
-      onMove(MOVE_PAYLOAD)
-      pending = false
-    }
-
-    const handlePointerMove = (e) => {
-      mousePos.current.x = e.clientX
-      mousePos.current.y = e.clientY
-      if (!pending) {
-        pending = true
-        rafId.current = requestAnimationFrame(updateTrail)
+      if (mouseRef.current) {
+        const mx = mouseRef.current.x
+        const my = mouseRef.current.y
+        
+        // Only trigger update when cursor actually moves
+        if (mx !== lastX || my !== lastY) {
+          lastX = mx
+          lastY = my
+          MOVE_PAYLOAD.uv.x = mx / window.innerWidth
+          MOVE_PAYLOAD.uv.y = 1 - (my / window.innerHeight)
+          onMove(MOVE_PAYLOAD)
+        }
       }
+      rafId = requestAnimationFrame(updateTrail)
     }
 
-    window.addEventListener('mousemove', handlePointerMove, { passive: true })
-    return () => {
-      window.removeEventListener('mousemove', handlePointerMove)
-      if (rafId.current) cancelAnimationFrame(rafId.current)
-    }
-  }, [onMove])
+    rafId = requestAnimationFrame(updateTrail)
+    return () => cancelAnimationFrame(rafId)
+  }, [onMove, mouseRef])
 
   if (!trail) return null
 
