@@ -1,0 +1,75 @@
+    .reel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6rem;
+  padding: 1rem 0 3rem;
+  overflow: hidden; /* prevent the horizontal drift from creating a scrollbar */
+}
+
+.reel-item {
+  display: flex;
+  width: 100%;
+}
+
+.reel-item--right {
+  justify-content: flex-start;
+}
+
+.reel-item--left {
+  justify-content: flex-end;
+}
+
+.reel-track {
+  position: relative;
+  width: 62%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #0a0a0a;
+  will-change: transform;
+}
+
+.reel-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(15%) contrast(1.05);
+}
+
+.reel-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: .9rem 1.1rem;
+  background: linear-gradient(to top, rgba(0,0,0,.75), transparent);
+}
+
+.reel-title {
+  font-size: .8rem;
+  letter-spacing: -.2px;
+  color: var(--fg);
+}
+
+.reel-tag {
+  font-size: .58rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mid);
+}
+
+@media (max-width: 860px) {
+  .reel-list {
+    gap: 3rem;
+  }
+  .reel-track {
+    width: 100%;
+  }
+  .reel-item--right,
+  .reel-item--left {
+    justify-content: center;
+  }
+}

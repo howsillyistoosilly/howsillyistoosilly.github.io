@@ -1,0 +1,32 @@
+.pixel-trail-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  background: transparent;
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+
+.pixel-trail-root.pixel-trail-ready {
+  opacity: 1;
+}
+
+.pixel-trail-root canvas {
+  background: transparent !important;
+}
+
+.pixel-canvas {
+  display: block;
+  background: transparent !important;
+  pointer-events: none !important;
+}
+
+.goo-filter-container {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
