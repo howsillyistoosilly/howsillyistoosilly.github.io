@@ -9,6 +9,8 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
   const trackRef = useRef(null)
   const videoRef = useRef(null)
   const [isVisible, setIsVisible] = useState(false)
+  const trackRectRef = useRef({ left: 0, top: 0, width: 1, height: 1 })
+  const tiltRafId = useRef(null)
   
   const boundsRef = useRef({ top: 0, height: 0, vh: typeof window !== 'undefined' ? window.innerHeight : 800 })
 
@@ -19,6 +21,11 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
     boundsRef.current.top = rect.top + scrollY
     boundsRef.current.height = rect.height
     boundsRef.current.vh = window.innerHeight
+
+    if (trackRef.current) {
+      const tr = trackRef.current.getBoundingClientRect()
+      trackRectRef.current = { left: tr.left, top: tr.top, width: tr.width || 1, height: tr.height || 1 }
+    }
   }, [])
 
   useEffect(() => {
@@ -70,51 +77,64 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
     track.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`
   })
 
-  // Hardware 3D Perspective Mouse Hover Tilt
-  const handleMouseMove = (e) => {
-    const track = trackRef.current
-    if (!track) return
-    const rect = track.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / rect.width - 0.5
-    const y = (e.clientY - rect.top) / rect.height - 0.5
-    
-    // Apply 3D perspective tilt to video element layer without affecting scroll position
-    const video = videoRef.current
-    if (video) {
-      video.style.transform = `perspective(800px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) scale3d(1.02, 1.02, 1)`
-    }
-  }
+  // Zero-reflow hardware 3D Perspective Mouse Hover Tilt
+  const handleMouseMove = useCallback((e) => {
+    if (tiltRafId.current) return
 
-  const handleMouseLeave = () => {
+    const clientX = e.clientX
+    const clientY = e.clientY
+
+    tiltRafId.current = requestAnimationFrame(() => {
+      tiltRafId.current = null
+      const video = videoRef.current
+      if (!video) return
+
+      const { left, top, width, height } = trackRectRef.current
+      const x = (clientX - left) / width - 0.5
+      const y = (clientY - top) / height - 0.5
+      
+      video.style.transform = `perspective(800px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) scale3d(1.02, 1.02, 1)`
+    })
+  }, [])
+
+  const handleMouseEnter = useCallback(() => {
+    if (trackRef.current) {
+      const tr = trackRef.current.getBoundingClientRect()
+      trackRectRef.current = { left: tr.left, top: tr.top, width: tr.width || 1, height: tr.height || 1 }
+    }
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    if (tiltRafId.current) {
+      cancelAnimationFrame(tiltRafId.current)
+      tiltRafId.current = null
+    }
     const video = videoRef.current
     if (video) {
       video.style.transform = 'perspective(800px) rotateY(0deg) rotateX(0deg) scale3d(1, 1, 1)'
     }
-  }
+  }, [])
 
   return (
     <div className={`reel-item reel-item--${direction > 0 ? 'right' : 'left'}`} ref={itemRef}>
       <div 
         className="reel-track" 
         ref={trackRef}
+        onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
         <video
-          ref={videoRef}
           className="reel-video"
-          poster={poster}
+          ref={videoRef}
+          autoPlay
           muted
           loop
           playsInline
           disablePictureInPicture
           disableRemotePlayback
           preload="metadata"
-          style={{
-            willChange: 'transform',
-            transition: 'transform 0.15s cubic-bezier(0.1, 0.9, 0.2, 1)',
-            transformStyle: 'preserve-3d',
-          }}
+          poster={poster}
         >
           {webm && <source src={webm} type="video/webm" />}
           {mp4 && <source src={mp4} type="video/mp4" />}

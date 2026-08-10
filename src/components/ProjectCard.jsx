@@ -1,4 +1,4 @@
-import { useRef, memo, useCallback } from 'react'
+import { useRef, memo, useCallback, useEffect } from 'react'
 
 export const Chip = memo(function Chip({ label }) {
   return (
@@ -10,19 +10,50 @@ export const Chip = memo(function Chip({ label }) {
 
 function ProjectCardComponent({ num, type, title, desc, tags, link, linkLabel, proj_screen }) {
   const cardRef = useRef(null)
+  const rectRef = useRef({ left: 0, top: 0, width: 1, height: 1 })
+  const rafId = useRef(null)
 
-  // 120fps GPU 3D Perspective Tilt on Mouse Movement
-  const handleMouseMove = useCallback((e) => {
-    const card = cardRef.current
-    if (!card) return
-    const rect = card.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / rect.width - 0.5
-    const y = (e.clientY - rect.top) / rect.height - 0.5
-
-    card.style.transform = `perspective(1000px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) translateZ(10px)`
+  // Cache card dimensions on enter/resize to eliminate synchronous getBoundingClientRect layout reflows during mousemove
+  const updateRect = useCallback(() => {
+    if (!cardRef.current) return
+    const r = cardRef.current.getBoundingClientRect()
+    rectRef.current = { left: r.left, top: r.top, width: r.width || 1, height: r.height || 1 }
   }, [])
 
+  useEffect(() => {
+    window.addEventListener('resize', updateRect, { passive: true })
+    return () => window.removeEventListener('resize', updateRect)
+  }, [updateRect])
+
+  // Zero-reflow mouse move handler using cached rect dimensions
+  const handleMouseMove = useCallback((e) => {
+    if (rafId.current) return
+
+    const clientX = e.clientX
+    const clientY = e.clientY
+
+    rafId.current = requestAnimationFrame(() => {
+      rafId.current = null
+      const card = cardRef.current
+      if (!card) return
+
+      const { left, top, width, height } = rectRef.current
+      const x = (clientX - left) / width - 0.5
+      const y = (clientY - top) / height - 0.5
+
+      card.style.transform = `perspective(1000px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) translateZ(10px)`
+    })
+  }, [])
+
+  const handleMouseEnter = useCallback(() => {
+    updateRect()
+  }, [updateRect])
+
   const handleMouseLeave = useCallback(() => {
+    if (rafId.current) {
+      cancelAnimationFrame(rafId.current)
+      rafId.current = null
+    }
     const card = cardRef.current
     if (!card) return
     card.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) translateZ(0px)'
@@ -32,11 +63,11 @@ function ProjectCardComponent({ num, type, title, desc, tags, link, linkLabel, p
     <div
       className="proj"
       ref={cardRef}
+      onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
         willChange: 'transform',
-        transition: 'transform 0.15s cubic-bezier(0.1, 0.9, 0.2, 1)',
         transformStyle: 'preserve-3d',
       }}
     >
