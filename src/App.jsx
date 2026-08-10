@@ -3,6 +3,7 @@ import './App.css'
 import { ViewportProvider } from './context/ViewportContext'
 import ProjectCard, { Chip } from './components/ProjectCard'
 import VideoParallax from './components/VideoParallax'
+import { PerfMonitor } from './components/PerfMonitor'
 
 import retroSnake from './assets/retro-snake.png'
 import monotone from './assets/monotone.png'
@@ -48,6 +49,7 @@ const HERO_SKILLS = Object.freeze([
 export default function App() {
   return (
     <ViewportProvider>
+      <PerfMonitor />
       <Suspense fallback={null}>
         <PixelTrail
           gridSize={150}
