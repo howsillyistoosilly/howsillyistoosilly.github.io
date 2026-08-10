@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo, memo } from 'react'
+import { useRef, useEffect, useState, useMemo, memo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF, OrbitControls, Stage } from '@react-three/drei'
 import * as THREE from 'three'
@@ -50,19 +50,14 @@ function Model({ path }) {
   useFrame((_, delta) => {
     if (!ref.current) return
 
-    // Base continuous 3D spin
     spinY.current += delta * 0.4
-
-    // Target tilt from mouse normalized position
     const targetTiltX = mouseRef.current ? mouseRef.current.normalizedX * 0.5 : 0
     const targetTiltY = mouseRef.current ? mouseRef.current.normalizedY * 0.3 : 0
 
-    // Smooth lerp to target mouse tilt
     const factor = Math.min(delta * 6, 0.15)
     tiltRef.current.x += (targetTiltX - tiltRef.current.x) * factor
     tiltRef.current.y += (targetTiltY - tiltRef.current.y) * factor
 
-    // Combine spin and tilt cleanly without accumulating feedback loops
     ref.current.rotation.y = spinY.current + tiltRef.current.x
     ref.current.rotation.x = tiltRef.current.y
   })
@@ -71,39 +66,81 @@ function Model({ path }) {
 }
 
 function ControllerModel({ path }) {
+  const containerRef = useRef(null)
+  const [isVisible, setIsVisible] = useState(true)
+
+  // IntersectionObserver + Document Visibility: Freeze canvas rendering completely when offscreen or tab inactive
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    let isIntersecting = true
+    let isTabVisible = !document.hidden
+
+    const updateVisibility = () => {
+      setIsVisible(isIntersecting && isTabVisible)
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          isIntersecting = entry.isIntersecting
+          updateVisibility()
+        })
+      },
+      { threshold: 0.05 }
+    )
+
+    const handleVisibilityChange = () => {
+      isTabVisible = !document.hidden
+      updateVisibility()
+    }
+
+    observer.observe(el)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      observer.disconnect()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
+
   const handleCreated = useMemo(() => ({ gl }) => {
     gl.setClearColor(0x000000, 0)
     gl.domElement.style.background = 'transparent'
   }, [])
 
   return (
-    <Canvas
-      id="controller-canvas"
-      style={{ width: '100%', height: '100%', background: 'transparent' }}
-      camera={{ position: [0, 0, 3], fov: 45 }}
-      gl={{
-        antialias: true,
-        alpha: true,
-        powerPreference: 'high-performance',
-        stencil: false,
-        depth: true,
-      }}
-      onCreated={handleCreated}
-      dpr={typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1}
-    >
-      <ambientLight intensity={0.15} />
-      <directionalLight position={[2, 4, 2]} intensity={1.4} />
-      <directionalLight position={[-2, -1, -2]} intensity={0.2} />
-      <Stage adjustCamera environment={null}>
-        <Model path={path} />
-      </Stage>
-      <OrbitControls
-        enableZoom={false}
-        enablePan={false}
-        rotateSpeed={0.6}
-        makeDefault
-      />
-    </Canvas>
+    <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
+      <Canvas
+        id="controller-canvas"
+        style={{ width: '100%', height: '100%', background: 'transparent' }}
+        camera={{ position: [0, 0, 3], fov: 45 }}
+        frameloop={isVisible ? 'always' : 'never'}
+        gl={{
+          antialias: true,
+          alpha: true,
+          powerPreference: 'high-performance',
+          stencil: false,
+          depth: true,
+        }}
+        onCreated={handleCreated}
+        dpr={typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1}
+      >
+        <ambientLight intensity={0.15} />
+        <directionalLight position={[2, 4, 2]} intensity={1.4} />
+        <directionalLight position={[-2, -1, -2]} intensity={0.2} />
+        <Stage adjustCamera environment={null}>
+          <Model path={path} />
+        </Stage>
+        <OrbitControls
+          enableZoom={false}
+          enablePan={false}
+          rotateSpeed={0.6}
+          makeDefault
+        />
+      </Canvas>
+    </div>
   )
 }
 

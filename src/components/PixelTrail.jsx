@@ -27,7 +27,6 @@ const FRAGMENT_SHADER = `
     vec2 screenUv = gl_FragCoord.xy / uResolution;
     vec2 cellCenter = (floor(screenUv * uGridSize) + 0.5) / uGridSize;
     
-    // Correct aspect ratio for circular trail distance calculation
     vec2 aspect = vec2(uResolution.x / min(uResolution.x, uResolution.y), uResolution.y / min(uResolution.x, uResolution.y));
     vec2 cellCenterAspect = cellCenter * aspect;
 
@@ -40,14 +39,12 @@ const FRAGMENT_SHADER = `
       vec2 ptAspect = pt.xy * aspect;
       float dist = distance(cellCenterAspect, ptAspect);
       
-      // Calculate smooth falloff for each trail point
       float radius = uTrailRadius * (0.4 + 0.6 * pt.z);
       float intensity = smoothstep(radius, 0.0, dist) * pt.z;
       
       trailStrength = max(trailStrength, intensity);
     }
 
-    // Crisp pixel grid outline matching screen UV space
     vec2 cellUv = fract(screenUv * uGridSize);
     float edge = min(min(cellUv.x, 1.0 - cellUv.x), min(cellUv.y, 1.0 - cellUv.y));
     float gridFactor = smoothstep(0.0, 0.04, edge);
@@ -80,7 +77,6 @@ function GpuTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor }) {
     return new THREE.Vector2(width * viewport.dpr, height * viewport.dpr)
   }, [width, height, viewport.dpr])
 
-  // Pre-allocated ring buffer data for zero-GC GPU updates
   const trailPointsRef = useRef(
     Array.from({ length: TRAIL_COUNT }, () => ({ x: 0, y: 0, age: 0 }))
   )
@@ -92,7 +88,6 @@ function GpuTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor }) {
     const mx = mouseRef.current.x
     const my = mouseRef.current.y
 
-    // Age existing points
     const decay = delta * (1000 / maxAge)
     const points = trailPointsRef.current
 
@@ -102,7 +97,6 @@ function GpuTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor }) {
       }
     }
 
-    // Add new point when cursor moves > 1px
     if (Math.abs(mx - lastMouseRef.current.x) > 1 || Math.abs(my - lastMouseRef.current.y) > 1) {
       lastMouseRef.current.x = mx
       lastMouseRef.current.y = my
@@ -115,7 +109,6 @@ function GpuTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor }) {
       headIndexRef.current = (headIndexRef.current + 1) % TRAIL_COUNT
     }
 
-    // Update uniform vector values in place
     const uniforms = material.uniforms.uTrail.value
     for (let i = 0; i < TRAIL_COUNT; i++) {
       uniforms[i].set(points[i].x, points[i].y, points[i].age)
@@ -145,6 +138,7 @@ function PixelTrailComponent({
   color = '#f0f0f0',
 }) {
   const [ready, setReady] = useState(false)
+  const [isTabVisible, setIsTabVisible] = useState(true)
   const [size, setSize] = useState(() => ({
     width: typeof window !== 'undefined' ? window.innerWidth : 0,
     height: typeof window !== 'undefined' ? window.innerHeight : 0,
@@ -166,6 +160,14 @@ function PixelTrailComponent({
     }
   }, [])
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsTabVisible(!document.hidden)
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
   const handleCreated = useMemo(() => ({ gl, scene }) => {
     gl.setClearColor(0x000000, 0)
     scene.background = null
@@ -178,7 +180,7 @@ function PixelTrailComponent({
         id="pixel-trail-canvas"
         className="pixel-canvas"
         flat
-        frameloop="always"
+        frameloop={isTabVisible ? 'always' : 'never'}
         style={{
           background: 'transparent',
           pointerEvents: 'none',
