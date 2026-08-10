@@ -8,7 +8,7 @@ import './PixelTrail.css'
 
 const FBO_SIZE = 512
 
-// --- FBO Update Shader (Computes continuous line stroke math on GPU VRAM) ---
+// --- FBO Update Shader (Computes hard-edge dot stroke math on GPU VRAM) ---
 
 const FBO_VERTEX_SHADER = `
   varying vec2 vUv;
@@ -42,7 +42,9 @@ const FBO_FRAGMENT_SHADER = `
     vec2 b = uCurrMouse * uAspect;
 
     float dist = distanceToSegment(p, a, b);
-    float stroke = smoothstep(uRadius, 0.0, dist);
+    
+    // Hard-edge dot stroke matching original useTrailTexture canvas arc (no flashlight spotlight glow!)
+    float stroke = smoothstep(uRadius, uRadius * 0.85, dist);
 
     float val = max(prevVal, stroke);
     gl_FragColor = vec4(val, 0.0, 0.0, 1.0);
@@ -107,7 +109,6 @@ function GpuFboTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor }) {
   const viewport = useThree(s => s.viewport)
   const { mouseRef } = useViewport()
 
-  // Pre-allocated GPU FBO Targets (Ping-Pong buffers inside GPU VRAM)
   const fboTargets = useMemo(() => {
     const options = {
       minFilter: THREE.LinearFilter,
@@ -144,9 +145,7 @@ function GpuFboTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor }) {
     return new THREE.Vector2(width / maxDim, height / maxDim)
   }, [width, height])
 
-  // Compute exact frame decay factor from maxAge prop
   const decayFactor = useMemo(() => {
-    // 60FPS reference: decay = (1 - (1000 / maxAge / 60))
     const framesToLive = (maxAge / 1000) * 60
     return Math.max(0.85, Math.min(0.99, 1.0 - (2.5 / Math.max(framesToLive, 1))))
   }, [maxAge])
@@ -167,7 +166,6 @@ function GpuFboTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor }) {
     const readTarget = fboTargets[readIndexRef.current]
     const writeTarget = fboTargets[1 - readIndexRef.current]
 
-    // Pass GPU FBO update uniforms
     fboScene.mat.uniforms.tPrevTrail.value = readTarget.texture
     fboScene.mat.uniforms.uCurrMouse.value.copy(currMouseVec.current)
     fboScene.mat.uniforms.uPrevMouse.value.copy(prevMouseVec.current)
@@ -175,15 +173,12 @@ function GpuFboTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor }) {
     fboScene.mat.uniforms.uDecay.value = decayFactor
     fboScene.mat.uniforms.uAspect.value.copy(aspectVec)
 
-    // Render 100% inside GPU VRAM without CPU canvas texture upload
     gl.setRenderTarget(writeTarget)
     gl.render(fboScene.scene, fboScene.camera)
     gl.setRenderTarget(null)
 
-    // Swap Ping-Pong targets
     readIndexRef.current = 1 - readIndexRef.current
 
-    // Bind current GPU FBO texture to display material
     displayMat.uniforms.mouseTrail.value = writeTarget.texture
   })
 
