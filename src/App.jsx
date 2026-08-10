@@ -11,9 +11,15 @@ import mousiee from './assets/mousie.png'
 import cubed from './assets/cubed.png'
 import controllerGlb from './assets/controller.glb'
 
-import finalCompVideo from './assets/FinalComp.mp4'
-import ntlTrailerVideo from './assets/ntlTrailer.mp4'
-import backroomsVideo from './assets/backrooms.mkv'
+import finalCompWebm from './assets/FinalComp.webm'
+import finalCompMp4 from './assets/FinalComp.mp4'
+
+import ntlTrailerWebm from './assets/ntlTrailer.webm'
+import ntlTrailerMp4 from './assets/ntlTrailer.mp4'
+
+import backroomsWebm from './assets/backrooms.webm'
+import backroomsMp4 from './assets/backrooms.mp4'
+
 import poster1Image from './assets/poster1.jpeg'
 
 // Lazy load heavy Three.js / R3F Canvas components with Suspense
@@ -30,9 +36,9 @@ const PROJECTS = Object.freeze([
 ])
 
 const REEL = Object.freeze([
-  { title: 'Arythmatic', tag: 'motion graphics', src: finalCompVideo, poster: poster1Image },
-  { title: 'Next Tech Lab', tag: 'after effects', src: ntlTrailerVideo, poster: '' },
-  { title: '3D Renders', tag: 'Backrooms', src: backroomsVideo, poster: '' },
+  { title: 'Arythmatic', tag: 'motion graphics', webm: finalCompWebm, mp4: finalCompMp4, poster: poster1Image },
+  { title: 'Next Tech Lab', tag: 'after effects', webm: ntlTrailerWebm, mp4: ntlTrailerMp4, poster: '' },
+  { title: '3D Renders', tag: 'Backrooms', webm: backroomsWebm, mp4: backroomsMp4, poster: '' },
 ])
 
 const HERO_SKILLS = Object.freeze([

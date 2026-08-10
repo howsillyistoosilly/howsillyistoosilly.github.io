@@ -10,12 +10,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       root
       className="overflow-x-hidden w-screen"
       options={{
-      lerp: 0.09,
-      syncTouch: false,
-      smoothWheel: true,
-      // wheelMultiplier: 1.5,
-      gestureOrientation: "vertical",
-      easing: (t) => 1 - Math.pow(1 - t, 4),
+        lerp: 0.14,
+        duration: 0.9,
+        smoothWheel: true,
+        wheelMultiplier: 1.0,
+        touchMultiplier: 1.5,
+        gestureOrientation: 'vertical',
       }}
     >
     <App />

@@ -4,14 +4,13 @@ import { useLenis } from 'lenis/react'
 const X_RANGE = 140
 const Y_RANGE = 70
 
-function VideoCardComponent({ title, tag, src, poster, direction = 1 }) {
+function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 }) {
   const itemRef = useRef(null)
   const trackRef = useRef(null)
   const videoRef = useRef(null)
   const [isVisible, setIsVisible] = useState(false)
   const boundsRef = useRef({ top: 0, height: 0, vh: typeof window !== 'undefined' ? window.innerHeight : 800 })
 
-  // Measure card bounds passively on resize / intersection to prevent layout thrashing inside scroll callback
   const updateBounds = useCallback(() => {
     if (!itemRef.current) return
     const rect = itemRef.current.getBoundingClientRect()
@@ -27,7 +26,6 @@ function VideoCardComponent({ title, tag, src, poster, direction = 1 }) {
     return () => window.removeEventListener('resize', updateBounds)
   }, [updateBounds])
 
-  // IntersectionObserver: Only play video when in viewport to free GPU decoding threads
   useEffect(() => {
     const el = itemRef.current
     if (!el) return
@@ -46,14 +44,13 @@ function VideoCardComponent({ title, tag, src, poster, direction = 1 }) {
           }
         })
       },
-      { threshold: 0.1 }
+      { threshold: 0.05 }
     )
 
     observer.observe(el)
     return () => observer.disconnect()
   }, [updateBounds])
 
-  // Lenis smooth scroll tick: Uses cached absolute element scroll top position
   useLenis((lenis) => {
     const track = trackRef.current
     if (!track || !isVisible) return
@@ -62,7 +59,6 @@ function VideoCardComponent({ title, tag, src, poster, direction = 1 }) {
     const { top, height, vh } = boundsRef.current
     const itemOffset = top - scrollY
 
-    // Progress: 0 = entering bottom, 1 = exiting top
     const raw = 1 - (itemOffset + height) / (vh + height)
     const progress = Math.min(Math.max(raw, 0), 1)
 
@@ -72,18 +68,13 @@ function VideoCardComponent({ title, tag, src, poster, direction = 1 }) {
     track.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`
   })
 
-  // 3D Perspective Tilt on Hover
   const handleMouseMove = (e) => {
     const track = trackRef.current
     if (!track) return
     const rect = track.getBoundingClientRect()
     const x = (e.clientX - rect.left) / rect.width - 0.5
     const y = (e.clientY - rect.top) / rect.height - 0.5
-    track.style.transform += ` perspective(800px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg)`
-  }
-
-  const handleMouseLeave = () => {
-    // Parallax scroll handler will naturally reset transform on next frame tick
+    track.style.transform += ` perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg)`
   }
 
   return (
@@ -92,18 +83,20 @@ function VideoCardComponent({ title, tag, src, poster, direction = 1 }) {
         className="reel-track" 
         ref={trackRef}
         onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
       >
         <video
           ref={videoRef}
           className="reel-video"
-          src={src}
           poster={poster}
           muted
           loop
           playsInline
           preload="metadata"
-        />
+        >
+          {webm && <source src={webm} type="video/webm" />}
+          {mp4 && <source src={mp4} type="video/mp4" />}
+          {src && <source src={src} />}
+        </video>
         <div className="reel-caption">
           <span className="reel-title">{title}</span>
           <span className="reel-tag">{tag}</span>

@@ -28,7 +28,6 @@
   will-change: transform;
   transform-style: preserve-3d;
   backface-visibility: hidden;
-  transition: transform 0.1s cubic-bezier(0.1, 1, 0.1, 1);
 }
 
 .reel-video {
