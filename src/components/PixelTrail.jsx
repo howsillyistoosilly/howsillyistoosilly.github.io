@@ -7,9 +7,9 @@ import { useViewport } from '../context/ViewportContext'
 import { WebGLPerfCollector } from './PerfMonitor'
 import './PixelTrail.css'
 
-const TRAIL_POINTS = 16
+const TRAIL_POINTS = 18
 
-// --- 100% GPU Line-Segment Distance Pixel Trail Shader -------------------
+// --- 100% GPU Chronological Line-Segment Pixel Trail Shader --------------
 
 const VERTEX_SHADER = `
   void main() {
@@ -21,7 +21,7 @@ const FRAGMENT_SHADER = `
   uniform vec2 uResolution;
   uniform float uGridSize;
   uniform vec3 uPixelColor;
-  uniform vec3 uTrail[${TRAIL_POINTS}]; // x: uv.x, y: uv.y, z: age/alpha (1.0 to 0.0)
+  uniform vec3 uTrail[${TRAIL_POINTS}]; // x: uv.x, y: uv.y, z: alpha/age (1.0 = head, 0.0 = tail)
   uniform float uTrailRadius;
 
   // Calculates exact distance from point p to line segment a-b in aspect-corrected space
@@ -42,28 +42,28 @@ const FRAGMENT_SHADER = `
     // Discrete aspect-correct pixel grid cell center
     vec2 aspectGrid = vec2(uGridSize, uGridSize * (uResolution.y / uResolution.x));
     vec2 cellCenter = (floor(screenUv * aspectGrid) + 0.5) / aspectGrid;
-    vec2 cellAspect = cellCenter * aspect;
+    vec2 cellCenterAspect = cellCenter * aspect;
 
     float maxStrength = 0.0;
 
-    // Evaluate line segments between consecutive trail points on GPU in parallel
+    // Evaluate line segments between strictly chronological points (index 0 = head, 17 = tail)
     for (int i = 0; i < ${TRAIL_POINTS} - 1; i++) {
       vec3 pA = uTrail[i];
       vec3 pB = uTrail[i + 1];
 
-      if (pA.z <= 0.001 && pB.z <= 0.001) continue;
+      if (pA.z <= 0.001 || pB.z <= 0.001) continue;
 
       vec2 aAspect = pA.xy * aspect;
       vec2 bAspect = pB.xy * aspect;
 
-      float segDist = distanceToSegment(cellAspect, aAspect, bAspect);
-      float avgAge = max(pA.z, pB.z);
-
-      // Sharp discrete step matching original retro pixel block look
-      float radius = uTrailRadius * (0.3 + 0.7 * avgAge);
+      float segDist = distanceToSegment(cellCenterAspect, aAspect, bAspect);
+      
+      // Taper trail thickness smoothly from head to tail
+      float segAlpha = min(pA.z, pB.z);
+      float radius = uTrailRadius * (0.2 + 0.8 * segAlpha);
       float floatFactor = step(segDist, radius);
 
-      float strokeStrength = floatFactor * avgAge;
+      float strokeStrength = floatFactor * segAlpha;
       maxStrength = max(maxStrength, strokeStrength);
     }
 
@@ -95,18 +95,17 @@ function GpuSegmentTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor, o
     return new THREE.Vector2(width * viewport.dpr, height * viewport.dpr)
   }, [width, height, viewport.dpr])
 
-  // Static pre-allocated ring buffer array (0 JS garbage collection memory allocations!)
+  // Static pre-allocated array ordered strictly from index 0 (newest head) to 17 (oldest tail)
   const trailArray = useMemo(() => {
     return Array.from({ length: TRAIL_POINTS }, () => new THREE.Vector3(-10, -10, 0))
   }, [])
 
-  const writeHeadRef = useRef(0)
   const lastMouseRef = useRef({ x: -1, y: -1 })
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.1)
 
-    // Fade trail points on GPU ring buffer
+    // Fade active trail points on GPU array
     const decayRate = Math.pow(0.01, dt / (maxAge / 1000))
     for (let i = 0; i < TRAIL_POINTS; i++) {
       if (trailArray[i].z > 0.001) {
@@ -115,7 +114,7 @@ function GpuSegmentTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor, o
       }
     }
 
-    // Push new mouse position into ring buffer ONLY when cursor moves > 0.5px
+    // On cursor movement, shift points down chronologically and insert new head at index 0
     if (mouseRef.current) {
       const mx = mouseRef.current.x
       const my = mouseRef.current.y
@@ -128,13 +127,17 @@ function GpuSegmentTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor, o
         lastMouseRef.current.x = mx
         lastMouseRef.current.y = my
 
-        const head = writeHeadRef.current
-        trailArray[head].set(
+        // Shift array elements down chronologically (0 -> 1 -> 2 -> ... -> 17)
+        for (let i = TRAIL_POINTS - 1; i > 0; i--) {
+          trailArray[i].copy(trailArray[i - 1])
+        }
+
+        // Set index 0 to new cursor position
+        trailArray[0].set(
           mx / window.innerWidth,
           1 - (my / window.innerHeight),
           1.0
         )
-        writeHeadRef.current = (head + 1) % TRAIL_POINTS
       }
     }
 
