@@ -1,8 +1,9 @@
 /* eslint-disable react/no-unknown-property */
-import { useEffect, useMemo, useState } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
+import { useEffect, useMemo, useRef, useState, memo } from 'react'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { shaderMaterial, useTrailTexture } from '@react-three/drei'
 import * as THREE from 'three'
+import { useViewport } from '../context/ViewportContext'
 import './PixelTrail.css'
 
 // --- Shader -----------------------------------------------------------
@@ -30,7 +31,13 @@ const FRAGMENT_SHADER = `
     vec2 uv = coverUv(screenUv);
     vec2 cellCenter = (floor(uv * gridSize) + 0.5) / gridSize;
     float trailStrength = texture2D(mouseTrail, cellCenter).r;
-    gl_FragColor = vec4(pixelColor, trailStrength);
+    
+    // Add subtle pixel edge glow for 120Hz smooth visuals
+    vec2 cellUv = fract(uv * gridSize);
+    float edge = min(min(cellUv.x, 1.0 - cellUv.x), min(cellUv.y, 1.0 - cellUv.y));
+    float gridFactor = smoothstep(0.0, 0.04, edge);
+    
+    gl_FragColor = vec4(pixelColor, trailStrength * gridFactor);
   }
 `
 
@@ -45,16 +52,16 @@ const DotMaterial = shaderMaterial(
   FRAGMENT_SHADER
 )
 
-// --- Scene --------------------------------------------------------------
-// Renders a fullscreen quad whose alpha comes from a trail texture that
-// fades in around the cursor. Nothing is drawn until that texture exists,
-// since sampling it before it's ready can return opaque white for a frame.
+const MOVE_PAYLOAD = { uv: { x: 0, y: 0 } }
 
 function TrailPlane({ gridSize, trailSize, maxAge, interpolate, easingFunction, pixelColor }) {
   const { width, height } = useThree(s => s.size)
   const viewport = useThree(s => s.viewport)
+  const { mouseRef } = useViewport()
 
   const material = useMemo(() => new DotMaterial(), [])
+  const colorObj = useMemo(() => new THREE.Color(pixelColor), [pixelColor])
+  const resolutionArr = useMemo(() => [width * viewport.dpr, height * viewport.dpr], [width, height, viewport.dpr])
 
   const [trail, onMove] = useTrailTexture({
     size: 512,
@@ -72,18 +79,12 @@ function TrailPlane({ gridSize, trailSize, maxAge, interpolate, easingFunction, 
     trail.wrapT = THREE.ClampToEdgeWrapping
   }, [trail])
 
-  useEffect(() => {
-    const handlePointerMove = (e) => {
-      onMove({
-        uv: {
-          x: e.clientX / window.innerWidth,
-          y: 1 - e.clientY / window.innerHeight,
-        },
-      })
-    }
-    window.addEventListener('mousemove', handlePointerMove)
-    return () => window.removeEventListener('mousemove', handlePointerMove)
-  }, [onMove])
+  useFrame(() => {
+    if (!mouseRef.current) return
+    MOVE_PAYLOAD.uv.x = mouseRef.current.x / window.innerWidth
+    MOVE_PAYLOAD.uv.y = 1 - mouseRef.current.y / window.innerHeight
+    onMove(MOVE_PAYLOAD)
+  })
 
   if (!trail) return null
 
@@ -95,17 +96,15 @@ function TrailPlane({ gridSize, trailSize, maxAge, interpolate, easingFunction, 
       <primitive
         object={material}
         gridSize={gridSize}
-        pixelColor={new THREE.Color(pixelColor)}
-        resolution={[width * viewport.dpr, height * viewport.dpr]}
+        pixelColor={colorObj}
+        resolution={resolutionArr}
         mouseTrail={trail}
       />
     </mesh>
   )
 }
 
-// --- Public component -----------------------------------------------------
-
-export default function PixelTrail({
+function PixelTrailComponent({
   gridSize = 150,
   trailSize = 0.035,
   maxAge = 400,
@@ -119,25 +118,27 @@ export default function PixelTrail({
     height: typeof window !== 'undefined' ? window.innerHeight : 0,
   }))
 
-  // Drive the canvas size explicitly from the actual viewport dimensions
-  // instead of relying on percentage-based CSS, which can resolve against
-  // the wrong ancestor and either shrink or overflow the canvas.
   useEffect(() => {
+    let timer
     const updateSize = () => {
       setSize({ width: window.innerWidth, height: window.innerHeight })
     }
-    updateSize()
-    window.addEventListener('resize', updateSize)
-    return () => window.removeEventListener('resize', updateSize)
+    const debouncedResize = () => {
+      clearTimeout(timer)
+      timer = setTimeout(updateSize, 100)
+    }
+    window.addEventListener('resize', debouncedResize, { passive: true })
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('resize', debouncedResize)
+    }
   }, [])
 
-  const handleCreated = ({ gl, scene }) => {
-    // Fully transparent clear before the first frame, so there's never
-    // an opaque frame while the canvas spins up.
+  const handleCreated = useMemo(() => ({ gl, scene }) => {
     gl.setClearColor(0x000000, 0)
     scene.background = null
     setReady(true)
-  }
+  }, [])
 
   return (
     <div className={`pixel-trail-root${ready ? ' pixel-trail-ready' : ''}`}>
@@ -173,3 +174,5 @@ export default function PixelTrail({
     </div>
   )
 }
+
+export default memo(PixelTrailComponent)

@@ -1,78 +1,56 @@
-import { useEffect } from 'react'
+import { lazy, Suspense } from 'react'
 import './App.css'
-import PixelTrail from './components/PixelTrail'
+import { ViewportProvider } from './context/ViewportContext'
+import ProjectCard, { Chip } from './components/ProjectCard'
 import VideoParallax from './components/VideoParallax'
+
 import retroSnake from './assets/retro-snake.png'
 import monotone from './assets/monotone.png'
 import proceduralTerrain from './assets/procedural_terrain_generation.jpg'
 import mousiee from './assets/mousie.png'
 import cubed from './assets/cubed.png'
-import ControllerModel from './components/ControllerModel'
 import controllerGlb from './assets/controller.glb'
 
-const PROJECTS = [
+import finalCompVideo from './assets/FinalComp.mp4'
+import ntlTrailerVideo from './assets/ntlTrailer.mp4'
+import backroomsVideo from './assets/backrooms.mkv'
+import poster1Image from './assets/poster1.jpeg'
+
+// Lazy load heavy Three.js / R3F Canvas components with Suspense
+const PixelTrail = lazy(() => import('./components/PixelTrail'))
+const ControllerModel = lazy(() => import('./components/ControllerModel'))
+
+const PROJECTS = Object.freeze([
   { num:'01', type:'Gameplay Systems', title:'Kinematic Player Movement', desc:'A movement system using kinematic physics with variable gravity zones and jump height that changes based on button hold time. Added coyote time and input buffering for smoother, more responsive controls.', tags:['unity','c#','physics'], link:'#', linkLabel:'gameplay video', proj_screen:'https://media1.tenor.com/m/LyiynwDA18oAAAAd/hai.gif' },
   { num:'02', type:'Shader Art', title:'Retro Snake', desc:'Classic snake with a full CRT visual treatment — scanlines, screen curvature, and chromatic aberration via custom shaders and post-processing to nail the old arcade monitor look.', tags:['unity','c#','hlsl','post-fx'], link:'#', linkLabel:'play on itch.io', proj_screen: retroSnake },
   { num:'03', type:'2D Platformer', title:'Monotone', desc:'A 2D platformer where you switch between dark and light modes — each reveals different platforms so you need to plan your route. Smooth transitions via shaders and particle effects. The mode swap is the mechanic.', tags:['unity','c#','shaders','particles'], link:'#', linkLabel:'play on itch.io', proj_screen: monotone },
   { num:'04', type:'Procedural Generation', title:'Procedural Terrain Generator', desc:"A voxel terrain system inspired by Minecraft and Terraria. Perlin noise for varied terrain shapes with chunk-based loading for performance. Built to go deep into Unity's mesh API.", tags:['unity','c#','mesh api','perlin noise'], link:'#', linkLabel:'check it out', proj_screen: proceduralTerrain },
   { num:'05', type:'Physics / Mobile', title:'Mousiee', desc:'Drag to set trajectory and velocity for a space mouse hunting cheese around the moon, then physics takes over. Real orbital mechanics for careful path planning.', tags:['unity','c#','orbital mechanics'], link:'#', linkLabel:'check it out', proj_screen: mousiee },
   { num:'06', type:'Game Jam · Puzzle', title:'Cubed', desc:'GMTK Game Jam 2025. You play as a cube solving puzzles with a time loop mechanic. Handled all level design and main menu UI. Ranked top 3,000 out of 9,500+ entries.', tags:['unity','level design','ui','game jam'], link:'#', linkLabel:'play on itch.io', proj_screen: cubed },
-]
+])
 
-// Fill these in with your own motion graphics / video edit clips.
-// Import each video the same way the project images are imported above, e.g.:
-//   import cosmicGirlReel from './assets/Jamiroquai - Cosmic Girl (Video).mp4'
-// then reference it as `src: cosmicGirlReel` below. Cards alternate
-// left/right drift automatically based on their position in this array.
-const REEL = [
-  { title: 'Arythmatic', tag: 'motion graphics', src: 'src/assets/FinalComp.mp4', poster: 'src/assets/poster1.jpeg' },
-  { title: 'Next Tech Lab', tag: 'after effects', src: 'src/assets/ntlTrailer.mp4', poster: '' },
-  { title: '3D Renders', tag: 'Backrooms', src: 'src/assets/backrooms.mkv', poster: '' },
-]
+const REEL = Object.freeze([
+  { title: 'Arythmatic', tag: 'motion graphics', src: finalCompVideo, poster: poster1Image },
+  { title: 'Next Tech Lab', tag: 'after effects', src: ntlTrailerVideo, poster: '' },
+  { title: '3D Renders', tag: 'Backrooms', src: backroomsVideo, poster: '' },
+])
 
-function Chip({ label }) {
-  return <span className="chip"><span>{label}</span></span>
-}
-
-function Project({ num, type, title, desc, tags, link, linkLabel, proj_screen }) {
-  return (
-    <div className="proj">
-      <div className="proj-num">{num}</div>
-      <div className="proj-info">
-        <div className="proj-type">{type}</div>
-        <div className="proj-title">{title}</div>
-        <div className="proj-desc">{desc}</div>
-        <div className="proj-tags">{tags.map(t => <Chip key={t} label={t} />)}</div>
-        <a className="proj-link" href={link}>{linkLabel}</a>
-      </div>
-      <div className="proj-screen">
-        {proj_screen ? (
-          <img
-            src={proj_screen}
-            alt={`${title} screenshot`}
-            className="proj-screen-img"
-          />
-        ) : (
-          <div className="proj-screen-placeholder">
-            <div className="proj-screen-label">screenshot / gif</div>
-            <div className="proj-screen-hint">replace with image</div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
+const HERO_SKILLS = Object.freeze([
+  'unity', 'Motion Graphics', 'Video Editing', 'c#', 'c++', 'blender', 'aseprite', 'level design', 'game jams', 'physics'
+])
 
 export default function App() {
   return (
-    <>
-      <PixelTrail
-        gridSize={150}
-        trailSize={0.035}
-        maxAge={400}
-        interpolate={8}
-        color="#f0f0f0"
-      />
+    <ViewportProvider>
+      <Suspense fallback={null}>
+        <PixelTrail
+          gridSize={150}
+          trailSize={0.035}
+          maxAge={400}
+          interpolate={8}
+          color="#f0f0f0"
+        />
+      </Suspense>
 
       <nav>
         <div className="logo">howsillyistoosilly</div>
@@ -92,13 +70,15 @@ export default function App() {
             <div className="hero-role">Gameplay Programmer · Level Designer</div>
             <p className="hero-desc">Just being a silly dev making stuff he finds cool and things he finds pretty.</p>
             <div className="chips">
-              {['unity','Motion Graphics','Video Editing','c#','c++','blender','aseprite','level design','game jams','physics'].map(t => <Chip key={t} label={t} />)}
+              {HERO_SKILLS.map(t => <Chip key={t} label={t} />)}
             </div>
           </div>
         </div>
         <div className="hero-right">
           <div className="hero-model">
-            <ControllerModel path={controllerGlb} />
+            <Suspense fallback={<div className="model-placeholder" />}>
+              <ControllerModel path={controllerGlb} />
+            </Suspense>
           </div>
           <div className="hero-corner">
             <span>open to work · collabs · game jams</span>
@@ -113,7 +93,7 @@ export default function App() {
           <h2 className="sec-title">Things I've <em>Built</em></h2>
         </div>
         <div className="proj-list">
-          {PROJECTS.map(p => <Project key={p.num} {...p} />)}
+          {PROJECTS.map(p => <ProjectCard key={p.num} {...p} />)}
         </div>
       </div>
 
@@ -173,6 +153,6 @@ export default function App() {
         <span>© 2026</span>
         <span>Adarsh Satish</span>
       </footer>
-    </>
+    </ViewportProvider>
   )
 }

@@ -1,23 +1,37 @@
-import { useRef, useEffect, useMemo } from 'react'
+import { useRef, useEffect, useMemo, memo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useGLTF, OrbitControls, Stage } from '@react-three/drei'
 import * as THREE from 'three'
+import { useViewport } from '../context/ViewportContext'
+
+let cachedGradTex = null
+function getGradientTexture() {
+  if (cachedGradTex) return cachedGradTex
+  if (typeof document === 'undefined') return null
+
+  const grad = document.createElement('canvas')
+  grad.width = 256
+  grad.height = 1
+  const gctx = grad.getContext('2d')
+  gctx.fillStyle = '#222222'
+  gctx.fillRect(0, 0, 128, 1)
+  gctx.fillStyle = '#ffffff'
+  gctx.fillRect(128, 0, 128, 1)
+
+  cachedGradTex = new THREE.CanvasTexture(grad)
+  cachedGradTex.minFilter = THREE.NearestFilter
+  cachedGradTex.magFilter = THREE.NearestFilter
+  return cachedGradTex
+}
 
 function Model({ path }) {
   const { scene } = useGLTF(path)
   const ref = useRef()
+  const { mouseRef } = useViewport()
 
   const mat = useMemo(() => {
-    const grad = document.createElement('canvas')
-    grad.width = 256; grad.height = 1
-    const gctx = grad.getContext('2d')
-    gctx.fillStyle = '#222222'; gctx.fillRect(0,   0, 128, 1)
-    gctx.fillStyle = '#ffffff'; gctx.fillRect(128, 0, 128, 1)
-    const gradTex = new THREE.CanvasTexture(grad)
-    gradTex.minFilter = gradTex.magFilter = THREE.NearestFilter
-
     return new THREE.MeshToonMaterial({
-      gradientMap: gradTex,
+      gradientMap: getGradientTexture(),
       color: 0xffffff,
     })
   }, [])
@@ -29,22 +43,28 @@ function Model({ path }) {
         child.frustumCulled = true
       }
     })
-    return () => {
-      mat.gradientMap?.dispose()
-      mat.dispose()
-    }
   }, [scene, mat])
 
   useFrame((_, delta) => {
-    ref.current.rotation.y += delta * 0.4
+    if (!ref.current || !mouseRef.current) return
+    const targetX = mouseRef.current.normalizedX * 0.6
+    const targetY = mouseRef.current.normalizedY * 0.4
+
+    // Delta-independent smooth 120fps lerp inertia
+    const factor = Math.min(delta * 4, 0.1)
+    ref.current.rotation.y += delta * 0.4 + (targetX - ref.current.rotation.y * 0.1) * factor
+    ref.current.rotation.x += (targetY - ref.current.rotation.x) * factor
   })
 
   return <primitive ref={ref} object={scene} />
 }
 
-useGLTF.preload('/controller.glb')
+function ControllerModel({ path }) {
+  const handleCreated = useMemo(() => ({ gl }) => {
+    gl.setClearColor(0x000000, 0)
+    gl.domElement.style.background = 'transparent'
+  }, [])
 
-export default function ControllerModel({ path }) {
   return (
     <Canvas
       id="controller-canvas"
@@ -57,11 +77,8 @@ export default function ControllerModel({ path }) {
         stencil: false,
         depth: true,
       }}
-      onCreated={({ gl }) => {
-        gl.setClearColor(0x000000, 0)
-        gl.domElement.style.background = 'transparent'
-      }}
-      dpr={Math.min(window.devicePixelRatio, 2)}
+      onCreated={handleCreated}
+      dpr={typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1}
     >
       <ambientLight intensity={0.15} />
       <directionalLight position={[2, 4, 2]} intensity={1.4} />
@@ -78,3 +95,5 @@ export default function ControllerModel({ path }) {
     </Canvas>
   )
 }
+
+export default memo(ControllerModel)
