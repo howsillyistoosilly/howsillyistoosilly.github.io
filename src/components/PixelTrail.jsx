@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unknown-property */
-import { useEffect, useMemo, useState, memo } from 'react'
+import { useEffect, useMemo, useRef, useState, memo } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { shaderMaterial, useTrailTexture } from '@react-three/drei'
 import * as THREE from 'three'
@@ -20,20 +20,13 @@ const FRAGMENT_SHADER = `
   uniform float gridSize;
   uniform vec3 pixelColor;
 
-  vec2 coverUv(vec2 uv) {
-    vec2 s = resolution.xy / max(resolution.x, resolution.y);
-    vec2 adjusted = (uv - 0.5) * s + 0.5;
-    return clamp(adjusted, 0.0, 1.0);
-  }
-
   void main() {
     vec2 screenUv = gl_FragCoord.xy / resolution;
-    vec2 uv = coverUv(screenUv);
-    vec2 cellCenter = (floor(uv * gridSize) + 0.5) / gridSize;
+    vec2 cellCenter = (floor(screenUv * gridSize) + 0.5) / gridSize;
     float trailStrength = texture2D(mouseTrail, cellCenter).r;
     
-    // Add subtle pixel edge glow for 120Hz smooth visuals
-    vec2 cellUv = fract(uv * gridSize);
+    // Crisp pixel grid outline matching screen UV space
+    vec2 cellUv = fract(screenUv * gridSize);
     float edge = min(min(cellUv.x, 1.0 - cellUv.x), min(cellUv.y, 1.0 - cellUv.y));
     float gridFactor = smoothstep(0.0, 0.04, edge);
     
@@ -82,11 +75,21 @@ function TrailPlane({ gridSize, trailSize, maxAge, interpolate, easingFunction, 
     trail.wrapT = THREE.ClampToEdgeWrapping
   }, [trail])
 
+  const lastMousePos = useRef({ x: -1, y: -1 })
+
   useFrame(() => {
     if (!mouseRef.current) return
-    MOVE_PAYLOAD.uv.x = mouseRef.current.x / window.innerWidth
-    MOVE_PAYLOAD.uv.y = 1 - mouseRef.current.y / window.innerHeight
-    onMove(MOVE_PAYLOAD)
+    const mx = mouseRef.current.x
+    const my = mouseRef.current.y
+    
+    // Only invoke trail texture draw when cursor moves > 0.5px to prevent 120Hz canvas flooding
+    if (Math.abs(mx - lastMousePos.current.x) > 0.5 || Math.abs(my - lastMousePos.current.y) > 0.5) {
+      lastMousePos.current.x = mx
+      lastMousePos.current.y = my
+      MOVE_PAYLOAD.uv.x = mx / window.innerWidth
+      MOVE_PAYLOAD.uv.y = 1 - my / window.innerHeight
+      onMove(MOVE_PAYLOAD)
+    }
   })
 
   if (!trail) return null

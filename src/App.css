@@ -3,6 +3,7 @@
   src: local('SF Pro Display'), url('./assets/SF-Pro-Display-Regular.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 * {

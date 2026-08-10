@@ -27,6 +27,8 @@ function getGradientTexture() {
 function Model({ path }) {
   const { scene } = useGLTF(path)
   const ref = useRef()
+  const spinY = useRef(0)
+  const tiltRef = useRef({ x: 0, y: 0 })
   const { mouseRef } = useViewport()
 
   const mat = useMemo(() => {
@@ -46,14 +48,23 @@ function Model({ path }) {
   }, [scene, mat])
 
   useFrame((_, delta) => {
-    if (!ref.current || !mouseRef.current) return
-    const targetX = mouseRef.current.normalizedX * 0.6
-    const targetY = mouseRef.current.normalizedY * 0.4
+    if (!ref.current) return
 
-    // Delta-independent smooth 120fps lerp inertia
-    const factor = Math.min(delta * 4, 0.1)
-    ref.current.rotation.y += delta * 0.4 + (targetX - ref.current.rotation.y * 0.1) * factor
-    ref.current.rotation.x += (targetY - ref.current.rotation.x) * factor
+    // Base continuous 3D spin
+    spinY.current += delta * 0.4
+
+    // Target tilt from mouse normalized position
+    const targetTiltX = mouseRef.current ? mouseRef.current.normalizedX * 0.5 : 0
+    const targetTiltY = mouseRef.current ? mouseRef.current.normalizedY * 0.3 : 0
+
+    // Smooth lerp to target mouse tilt
+    const factor = Math.min(delta * 6, 0.15)
+    tiltRef.current.x += (targetTiltX - tiltRef.current.x) * factor
+    tiltRef.current.y += (targetTiltY - tiltRef.current.y) * factor
+
+    // Combine spin and tilt cleanly without accumulating feedback loops
+    ref.current.rotation.y = spinY.current + tiltRef.current.x
+    ref.current.rotation.x = tiltRef.current.y
   })
 
   return <primitive ref={ref} object={scene} />

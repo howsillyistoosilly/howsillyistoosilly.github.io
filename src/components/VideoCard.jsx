@@ -110,6 +110,8 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
           muted
           loop
           playsInline
+          disablePictureInPicture
+          disableRemotePlayback
           preload="metadata"
         >
           {webm && <source src={webm} type="video/webm" />}
