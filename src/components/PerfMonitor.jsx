@@ -28,54 +28,92 @@ function PerfMonitorComponent() {
     frameDrops60Hz: 0, // >16.67ms
     frameDrops120Hz: 0, // >8.33ms
     totalFrames: 0,
+    totalSpikesCount: 0,
     webgl: { drawCalls: 0, triangles: 0, textures: 0, geometries: 0 },
   })
 
   const telemetryRef = useRef({
-    frames: 0,
     startTime: performance.now(),
     lastFrameTime: performance.now(),
+    lastIntervalTime: performance.now(),
+    frames: 0,
+    intervalFrames: 0,
     maxFrameTimeMs: 0,
     drops60Hz: 0,
     drops120Hz: 0,
     recentDeltas: [],
+    // Full timeline log from initial page load (captured every 500ms)
+    timeline: [],
+    // Chronological log of every single spike (>16.6ms) with exact timestamp
+    spikesLog: [],
     webgl: { drawCalls: 0, triangles: 0, textures: 0, geometries: 0 },
   })
 
   useEffect(() => {
     let rafId
     const t = telemetryRef.current
+    t.startTime = performance.now()
+    t.lastFrameTime = performance.now()
+    t.lastIntervalTime = performance.now()
 
     const tick = (now) => {
       const delta = now - t.lastFrameTime
       t.lastFrameTime = now
       t.frames++
+      t.intervalFrames++
+
+      const timeFromStartSec = ((now - t.startTime) / 1000).toFixed(2)
 
       if (delta > 0 && delta < 1000) {
         t.recentDeltas.push(delta)
-        if (t.recentDeltas.length > 300) t.recentDeltas.shift()
+        if (t.recentDeltas.length > 500) t.recentDeltas.shift()
 
-        if (delta > 16.67) t.drops60Hz++
         if (delta > 8.33) t.drops120Hz++
-        if (delta > t.maxFrameTimeMs) t.maxFrameTimeMs = delta
+        
+        if (delta > 16.67) {
+          t.drops60Hz++
+          // Log individual frame spike with exact timestamp from page load
+          t.spikesLog.push({
+            timestampSec: `${timeFromStartSec}s`,
+            spikeMs: parseFloat(delta.toFixed(2)),
+            severity: delta > 33.33 ? 'CRITICAL (>30FPS drop)' : 'MINOR (>60FPS drop)',
+          })
+          // Limit spikes log to latest 100 entries to keep JSON lightweight
+          if (t.spikesLog.length > 100) t.spikesLog.shift()
+        }
+
+        if (delta > t.maxFrameTimeMs) {
+          t.maxFrameTimeMs = delta
+        }
       }
 
-      // Update state every 250ms
-      if (now - t.startTime >= 250) {
-        const elapsedSec = (now - t.startTime) / 1000
-        const currentFps = Math.round(t.frames / elapsedSec)
-        const avgFrameTime = t.recentDeltas.length > 0
-          ? (t.recentDeltas.reduce((a, b) => a + b, 0) / t.recentDeltas.length).toFixed(2)
-          : (1000 / currentFps).toFixed(2)
+      // Record interval timeline snapshot every 500ms
+      if (now - t.lastIntervalTime >= 500) {
+        const intervalSec = (now - t.lastIntervalTime) / 1000
+        const intervalFps = Math.round(t.intervalFrames / intervalSec)
+        const avgDelta = t.recentDeltas.length > 0
+          ? parseFloat((t.recentDeltas.reduce((a, b) => a + b, 0) / t.recentDeltas.length).toFixed(2))
+          : parseFloat((1000 / Math.max(intervalFps, 1)).toFixed(2))
+
+        t.timeline.push({
+          timeSec: `${timeFromStartSec}s`,
+          fps: intervalFps,
+          avgFrameTimeMs: avgDelta,
+        })
+        if (t.timeline.length > 200) t.timeline.shift()
+
+        t.lastIntervalTime = now
+        t.intervalFrames = 0
 
         setStats({
-          fps: currentFps,
-          avgFps: currentFps,
-          frameTimeMs: parseFloat(avgFrameTime),
+          fps: intervalFps,
+          avgFps: intervalFps,
+          frameTimeMs: avgDelta,
           maxFrameTimeMs: parseFloat(t.maxFrameTimeMs.toFixed(2)),
           frameDrops60Hz: t.drops60Hz,
           frameDrops120Hz: t.drops120Hz,
           totalFrames: t.frames,
+          totalSpikesCount: t.spikesLog.length,
           webgl: { ...t.webgl },
         })
       }
@@ -87,38 +125,39 @@ function PerfMonitorComponent() {
 
     // Expose global helper for easy JSON extraction
     window.__getPerfMetrics = () => ({
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      screenResolution: `${window.innerWidth}x${window.innerHeight}`,
-      devicePixelRatio: window.devicePixelRatio,
-      hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
-      metrics: {
+      sessionSummary: {
+        recordingStartTime: new Date(Date.now() - (performance.now() - t.startTime)).toISOString(),
+        totalSessionDurationSec: ((performance.now() - t.startTime) / 1000).toFixed(2) + 's',
+        totalFramesRecorded: t.frames,
+        overallMaxFrameSpikeMs: parseFloat(t.maxFrameTimeMs.toFixed(2)),
+        totalFrameDrops60Hz: t.drops60Hz,
+        totalFrameDrops120Hz: t.drops120Hz,
+        totalLoggedSpikes: t.spikesLog.length,
         currentFps: stats.fps,
         avgFrameTimeMs: stats.frameTimeMs,
-        maxSpikeFrameTimeMs: stats.maxFrameTimeMs,
-        frameDrops60Hz: stats.frameDrops60Hz,
-        frameDrops120Hz: stats.frameDrops120Hz,
-        totalFramesCollected: stats.totalFrames,
-        webgl: stats.webgl,
-        recentFrameDeltasMs: t.recentDeltas,
       },
+      hardwareEnvironment: {
+        userAgent: navigator.userAgent,
+        screenResolution: `${window.innerWidth}x${window.innerHeight}`,
+        devicePixelRatio: window.devicePixelRatio,
+        hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
+      },
+      webglStats: t.webgl,
+      chronologicalSpikesLog: t.spikesLog, // Every frame spike >16.6ms with exact timestamp
+      timeSeriesTimeline500ms: t.timeline, // 500ms timeline graph from 0s to current time
     })
 
     return () => cancelAnimationFrame(rafId)
-  }, [stats.fps, stats.frameTimeMs, stats.maxFrameTimeMs, stats.frameDrops60Hz, stats.frameDrops120Hz, stats.totalFrames, stats.webgl])
+  }, [])
 
   const copyJsonMetrics = () => {
     const json = JSON.stringify(window.__getPerfMetrics(), null, 2)
     navigator.clipboard.writeText(json).then(() => {
-      alert('Performance Metrics JSON copied to clipboard!')
+      alert('Full Session Performance JSON copied to clipboard!')
     }).catch(() => {
       console.log('Performance Metrics JSON:\n', json)
       alert('Copied to Console (check developer tools)')
     })
-  }
-
-  const handleWebGLStats = (webglStats) => {
-    telemetryRef.current.webgl = webglStats
   }
 
   // Toggle overlay with Shift+P
@@ -159,7 +198,7 @@ function PerfMonitorComponent() {
             backdropFilter: 'blur(4px)',
           }}
         >
-          ⚡ {stats.fps} FPS | {stats.frameTimeMs}ms
+          ⚡ {stats.fps} FPS | {stats.frameTimeMs}ms | Spikes: {stats.totalSpikesCount}
         </button>
 
         {isOpen && (
@@ -177,7 +216,7 @@ function PerfMonitorComponent() {
               fontWeight: 'bold',
             }}
           >
-            📋 Copy JSON
+            📋 Copy Full Session JSON
           </button>
         )}
       </div>
@@ -194,7 +233,7 @@ function PerfMonitorComponent() {
             border: '1px solid rgba(255,255,255,0.15)',
             borderRadius: '8px',
             padding: '16px',
-            width: '280px',
+            width: '300px',
             fontFamily: 'monospace',
             fontSize: '11px',
             lineHeight: '1.6',
@@ -203,16 +242,17 @@ function PerfMonitorComponent() {
           }}
         >
           <div style={{ fontWeight: 'bold', marginBottom: '8px', borderBottom: '1px solid #333', paddingBottom: '4px' }}>
-            📊 PERF PROFILER TELEMETRY
+            📊 FULL SESSION PERF TELEMETRY
           </div>
-          <div>FPS: <span style={{ color: '#4caf50' }}>{stats.fps}</span></div>
-          <div>Frame Delta: <span>{stats.frameTimeMs} ms</span></div>
+          <div>Live FPS: <span style={{ color: '#4caf50' }}>{stats.fps}</span></div>
+          <div>Avg Frame Time: <span>{stats.frameTimeMs} ms</span></div>
           <div>Max Frame Spike: <span style={{ color: stats.maxFrameTimeMs > 20 ? '#f44336' : '#ff9800' }}>{stats.maxFrameTimeMs} ms</span></div>
-          <div>Drops (&gt;16.6ms / 60Hz): <span style={{ color: stats.frameDrops60Hz > 0 ? '#f44336' : '#fff' }}>{stats.frameDrops60Hz}</span></div>
+          <div>Logged Spikes (&gt;16.6ms): <span style={{ color: stats.totalSpikesCount > 0 ? '#f44336' : '#4caf50' }}>{stats.totalSpikesCount}</span></div>
           <div>Drops (&gt;8.3ms / 120Hz): <span style={{ color: stats.frameDrops120Hz > 0 ? '#ff9800' : '#fff' }}>{stats.frameDrops120Hz}</span></div>
+          <div>Total Recorded Frames: {stats.totalFrames}</div>
           
           <div style={{ fontWeight: 'bold', marginTop: '10px', marginBottom: '4px', borderBottom: '1px solid #333', paddingBottom: '2px' }}>
-            🎮 WEBGL STATS
+            🎮 WEBGL METRICS
           </div>
           <div>Draw Calls: {stats.webgl.drawCalls}</div>
           <div>Triangles: {stats.webgl.triangles}</div>
@@ -234,7 +274,7 @@ function PerfMonitorComponent() {
               textAlign: 'center',
             }}
           >
-            📋 Copy JSON Metrics to Send
+            📋 Copy Full Session JSON Metrics
           </button>
         </div>
       )}
