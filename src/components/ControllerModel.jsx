@@ -120,6 +120,7 @@ function ControllerModel({ path }) {
         gl={{
           antialias: true,
           alpha: true,
+          premultipliedAlpha: true,
           powerPreference: 'high-performance',
           stencil: false,
           depth: true,

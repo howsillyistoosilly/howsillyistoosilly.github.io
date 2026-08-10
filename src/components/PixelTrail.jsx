@@ -66,7 +66,8 @@ const FRAGMENT_SHADER = `
       maxStrength = max(maxStrength, strokeStrength);
     }
 
-    gl_FragColor = vec4(uPixelColor, maxStrength);
+    // Premultiply RGB by maxStrength to prevent WebKit / Safari WebGL transparent white canvas compositing bug
+    gl_FragColor = vec4(uPixelColor * maxStrength, maxStrength);
   }
 `
 
@@ -157,7 +158,6 @@ function GpuSegmentTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor })
       />
     </mesh>
   )
-
 }
 
 function PixelTrailComponent({
@@ -218,8 +218,8 @@ function PixelTrailComponent({
         }}
         gl={{
           alpha: true,
+          premultipliedAlpha: true,
           antialias: false,
-          premultipliedAlpha: false,
           preserveDrawingBuffer: false,
           powerPreference: 'high-performance',
         }}

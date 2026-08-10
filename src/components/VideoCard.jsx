@@ -9,8 +9,12 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
   const trackRef = useRef(null)
   const videoRef = useRef(null)
   const [isVisible, setIsVisible] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  
   const trackRectRef = useRef({ left: 0, top: 0, width: 1, height: 1 })
-  const tiltRafId = useRef(null)
+  const tiltTarget = useRef({ rotX: 0, rotY: 0, mouseX: 50, mouseY: 50 })
+  const tiltCurrent = useRef({ rotX: 0, rotY: 0, mouseX: 50, mouseY: 50 })
+  const rafId = useRef(null)
   
   const boundsRef = useRef({ top: 0, height: 0, vh: typeof window !== 'undefined' ? window.innerHeight : 800 })
 
@@ -59,7 +63,39 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
     return () => observer.disconnect()
   }, [updateBounds])
 
-  // Decoupled Lenis scroll tick: Updates scroll parallax transform smoothly on wrapper
+  // Continuous smooth inertia lerp loop during hover
+  useEffect(() => {
+    if (!isHovered) return
+
+    let animationFrameId
+    const loop = () => {
+      const cur = tiltCurrent.current
+      const tar = tiltTarget.current
+
+      cur.rotX += (tar.rotX - cur.rotX) * 0.1
+      cur.rotY += (tar.rotY - cur.rotY) * 0.1
+      cur.mouseX += (tar.mouseX - cur.mouseX) * 0.1
+      cur.mouseY += (tar.mouseY - cur.mouseY) * 0.1
+
+      const track = trackRef.current
+      if (track) {
+        track.style.setProperty('--mouse-x', `${cur.mouseX.toFixed(1)}%`)
+        track.style.setProperty('--mouse-y', `${cur.mouseY.toFixed(1)}%`)
+      }
+
+      const video = videoRef.current
+      if (video) {
+        video.style.transform = `perspective(1000px) rotateY(${cur.rotY.toFixed(2)}deg) rotateX(${cur.rotX.toFixed(2)}deg) scale3d(1.03, 1.03, 1) translateZ(12px)`
+      }
+
+      animationFrameId = requestAnimationFrame(loop)
+    }
+
+    animationFrameId = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(animationFrameId)
+  }, [isHovered])
+
+  // Decoupled Lenis scroll tick for smooth position parallax
   useLenis((lenis) => {
     const track = trackRef.current
     if (!track || !isVisible) return
@@ -77,24 +113,18 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
     track.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`
   })
 
-  // Zero-reflow hardware 3D Perspective Mouse Hover Tilt
   const handleMouseMove = useCallback((e) => {
-    if (tiltRafId.current) return
+    const { left, top, width, height } = trackRectRef.current
+    const px = (e.clientX - left) / width
+    const py = (e.clientY - top) / height
 
-    const clientX = e.clientX
-    const clientY = e.clientY
+    const x = px - 0.5
+    const y = py - 0.5
 
-    tiltRafId.current = requestAnimationFrame(() => {
-      tiltRafId.current = null
-      const video = videoRef.current
-      if (!video) return
-
-      const { left, top, width, height } = trackRectRef.current
-      const x = (clientX - left) / width - 0.5
-      const y = (clientY - top) / height - 0.5
-      
-      video.style.transform = `perspective(800px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) scale3d(1.02, 1.02, 1)`
-    })
+    tiltTarget.current.rotY = x * 10
+    tiltTarget.current.rotX = -y * 10
+    tiltTarget.current.mouseX = px * 100
+    tiltTarget.current.mouseY = py * 100
   }, [])
 
   const handleMouseEnter = useCallback(() => {
@@ -102,28 +132,29 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
       const tr = trackRef.current.getBoundingClientRect()
       trackRectRef.current = { left: tr.left, top: tr.top, width: tr.width || 1, height: tr.height || 1 }
     }
+    setIsHovered(true)
   }, [])
 
   const handleMouseLeave = useCallback(() => {
-    if (tiltRafId.current) {
-      cancelAnimationFrame(tiltRafId.current)
-      tiltRafId.current = null
-    }
+    setIsHovered(false)
+    tiltTarget.current = { rotX: 0, rotY: 0, mouseX: 50, mouseY: 50 }
+
     const video = videoRef.current
     if (video) {
-      video.style.transform = 'perspective(800px) rotateY(0deg) rotateX(0deg) scale3d(1, 1, 1)'
+      video.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale3d(1, 1, 1) translateZ(0px)'
     }
   }, [])
 
   return (
     <div className={`reel-item reel-item--${direction > 0 ? 'right' : 'left'}`} ref={itemRef}>
       <div 
-        className="reel-track" 
+        className={`reel-track${isHovered ? ' reel-track--hovered' : ''}`}
         ref={trackRef}
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
+        <div className="reel-spotlight" />
         <video
           className="reel-video"
           ref={videoRef}

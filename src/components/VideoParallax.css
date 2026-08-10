@@ -1,4 +1,4 @@
-    .reel-list {
+.reel-list {
   display: flex;
   flex-direction: column;
   gap: 6rem;
@@ -25,9 +25,37 @@
   aspect-ratio: 16 / 9;
   overflow: hidden;
   background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
   will-change: transform;
   transform-style: preserve-3d;
   backface-visibility: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.3s ease, box-shadow 0.4s ease;
+}
+
+.reel-track--hovered {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 255, 255, 0.06);
+}
+
+/* Mouse-driven dynamic radial spotlight overlay */
+.reel-spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.12),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.reel-track--hovered .reel-spotlight {
+  opacity: 1;
 }
 
 .reel-video {
@@ -36,31 +64,60 @@
   object-fit: cover;
   display: block;
   filter: grayscale(15%) contrast(1.05);
+  transition: transform 0.15s ease-out, filter 0.3s ease;
+  will-change: transform;
+  transform-style: preserve-3d;
 }
 
+.reel-track--hovered .reel-video {
+  filter: grayscale(0%) contrast(1.1);
+}
+
+/* Floating 3D Caption bar */
 .reel-caption {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
+  z-index: 3;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: .9rem 1.1rem;
-  background: linear-gradient(to top, rgba(0,0,0,.75), transparent);
+  padding: 1.1rem 1.4rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+  transform-style: preserve-3d;
+  transform: translateZ(25px);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reel-track--hovered .reel-caption {
+  transform: translateZ(35px);
 }
 
 .reel-title {
-  font-size: .8rem;
-  letter-spacing: -.2px;
+  font-size: 0.85rem;
+  letter-spacing: -0.2px;
   color: var(--fg);
+  font-weight: 500;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+  transition: color 0.2s ease, transform 0.3s ease;
+}
+
+.reel-track--hovered .reel-title {
+  color: #ffffff;
+  transform: translateX(4px);
 }
 
 .reel-tag {
-  font-size: .58rem;
+  font-size: 0.6rem;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--mid);
+  transition: color 0.2s ease;
+}
+
+.reel-track--hovered .reel-tag {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 @media (max-width: 860px) {

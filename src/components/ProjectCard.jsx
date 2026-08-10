@@ -1,4 +1,4 @@
-import { useRef, memo, useCallback, useEffect } from 'react'
+import { useRef, useEffect, useState, memo, useCallback } from 'react'
 
 export const Chip = memo(function Chip({ label }) {
   return (
@@ -10,10 +10,12 @@ export const Chip = memo(function Chip({ label }) {
 
 function ProjectCardComponent({ num, type, title, desc, tags, link, linkLabel, proj_screen }) {
   const cardRef = useRef(null)
+  const [isHovered, setIsHovered] = useState(false)
+  
   const rectRef = useRef({ left: 0, top: 0, width: 1, height: 1 })
-  const rafId = useRef(null)
+  const tiltTarget = useRef({ rotX: 0, rotY: 0, mouseX: 50, mouseY: 50 })
+  const tiltCurrent = useRef({ rotX: 0, rotY: 0, mouseX: 50, mouseY: 50 })
 
-  // Cache card dimensions on enter/resize to eliminate synchronous getBoundingClientRect layout reflows during mousemove
   const updateRect = useCallback(() => {
     if (!cardRef.current) return
     const r = cardRef.current.getBoundingClientRect()
@@ -25,52 +27,72 @@ function ProjectCardComponent({ num, type, title, desc, tags, link, linkLabel, p
     return () => window.removeEventListener('resize', updateRect)
   }, [updateRect])
 
-  // Zero-reflow mouse move handler using cached rect dimensions
-  const handleMouseMove = useCallback((e) => {
-    if (rafId.current) return
+  // Continuous smooth inertia lerp loop during hover
+  useEffect(() => {
+    if (!isHovered) return
 
-    const clientX = e.clientX
-    const clientY = e.clientY
+    let animationFrameId
+    const loop = () => {
+      const cur = tiltCurrent.current
+      const tar = tiltTarget.current
 
-    rafId.current = requestAnimationFrame(() => {
-      rafId.current = null
+      cur.rotX += (tar.rotX - cur.rotX) * 0.1
+      cur.rotY += (tar.rotY - cur.rotY) * 0.1
+      cur.mouseX += (tar.mouseX - cur.mouseX) * 0.1
+      cur.mouseY += (tar.mouseY - cur.mouseY) * 0.1
+
       const card = cardRef.current
-      if (!card) return
+      if (card) {
+        card.style.setProperty('--mouse-x', `${cur.mouseX.toFixed(1)}%`)
+        card.style.setProperty('--mouse-y', `${cur.mouseY.toFixed(1)}%`)
+        card.style.transform = `perspective(1000px) rotateY(${cur.rotY.toFixed(2)}deg) rotateX(${cur.rotX.toFixed(2)}deg)`
+      }
 
-      const { left, top, width, height } = rectRef.current
-      const x = (clientX - left) / width - 0.5
-      const y = (clientY - top) / height - 0.5
+      animationFrameId = requestAnimationFrame(loop)
+    }
 
-      card.style.transform = `perspective(1000px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) translateZ(10px)`
-    })
+    animationFrameId = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(animationFrameId)
+  }, [isHovered])
+
+  const handleMouseMove = useCallback((e) => {
+    const { left, top, width, height } = rectRef.current
+    const px = (e.clientX - left) / width
+    const py = (e.clientY - top) / height
+
+    const x = px - 0.5
+    const y = py - 0.5
+
+    tiltTarget.current.rotY = x * 8
+    tiltTarget.current.rotX = -y * 8
+    tiltTarget.current.mouseX = px * 100
+    tiltTarget.current.mouseY = py * 100
   }, [])
 
   const handleMouseEnter = useCallback(() => {
     updateRect()
+    setIsHovered(true)
   }, [updateRect])
 
   const handleMouseLeave = useCallback(() => {
-    if (rafId.current) {
-      cancelAnimationFrame(rafId.current)
-      rafId.current = null
-    }
+    setIsHovered(false)
+    tiltTarget.current = { rotX: 0, rotY: 0, mouseX: 50, mouseY: 50 }
+
     const card = cardRef.current
-    if (!card) return
-    card.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) translateZ(0px)'
+    if (card) {
+      card.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg)'
+    }
   }, [])
 
   return (
     <div
-      className="proj"
+      className={`proj${isHovered ? ' proj--hovered' : ''}`}
       ref={cardRef}
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      style={{
-        willChange: 'transform',
-        transformStyle: 'preserve-3d',
-      }}
     >
+      <div className="proj-spotlight" />
       <div className="proj-num">{num}</div>
       <div className="proj-info">
         <div className="proj-type">{type}</div>
