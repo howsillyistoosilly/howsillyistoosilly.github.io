@@ -9,7 +9,9 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
   const trackRef = useRef(null)
   const videoRef = useRef(null)
   const [isVisible, setIsVisible] = useState(false)
+  
   const boundsRef = useRef({ top: 0, height: 0, vh: typeof window !== 'undefined' ? window.innerHeight : 800 })
+  const tiltRef = useRef({ targetRx: 0, targetRy: 0, currentRx: 0, currentRy: 0 })
 
   const updateBounds = useCallback(() => {
     if (!itemRef.current) return
@@ -65,7 +67,16 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
     const x = (progress - 0.5) * X_RANGE * direction
     const y = (0.5 - progress) * Y_RANGE
 
-    track.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`
+    // Smoothly lerp tilt angles to eliminate mouse hover jitter
+    const tilt = tiltRef.current
+    tilt.currentRx += (tilt.targetRx - tilt.currentRx) * 0.1
+    tilt.currentRy += (tilt.targetRy - tilt.currentRy) * 0.1
+
+    const tiltStr = (Math.abs(tilt.currentRx) > 0.01 || Math.abs(tilt.currentRy) > 0.01)
+      ? ` perspective(800px) rotateX(${tilt.currentRx.toFixed(2)}deg) rotateY(${tilt.currentRy.toFixed(2)}deg)`
+      : ''
+
+    track.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)${tiltStr}`
   })
 
   const handleMouseMove = (e) => {
@@ -74,7 +85,14 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
     const rect = track.getBoundingClientRect()
     const x = (e.clientX - rect.left) / rect.width - 0.5
     const y = (e.clientY - rect.top) / rect.height - 0.5
-    track.style.transform += ` perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg)`
+
+    tiltRef.current.targetRy = x * 8
+    tiltRef.current.targetRx = -y * 8
+  }
+
+  const handleMouseLeave = () => {
+    tiltRef.current.targetRx = 0
+    tiltRef.current.targetRy = 0
   }
 
   return (
@@ -83,6 +101,7 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
         className="reel-track" 
         ref={trackRef}
         onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
       >
         <video
           ref={videoRef}

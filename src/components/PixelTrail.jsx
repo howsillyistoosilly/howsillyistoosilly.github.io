@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unknown-property */
-import { useEffect, useMemo, useRef, useState, memo } from 'react'
+import { useEffect, useMemo, useState, memo } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { shaderMaterial, useTrailTexture } from '@react-three/drei'
 import * as THREE from 'three'
@@ -61,7 +61,10 @@ function TrailPlane({ gridSize, trailSize, maxAge, interpolate, easingFunction, 
 
   const material = useMemo(() => new DotMaterial(), [])
   const colorObj = useMemo(() => new THREE.Color(pixelColor), [pixelColor])
-  const resolutionArr = useMemo(() => [width * viewport.dpr, height * viewport.dpr], [width, height, viewport.dpr])
+  
+  const resolutionVec = useMemo(() => {
+    return new THREE.Vector2(width * viewport.dpr, height * viewport.dpr)
+  }, [width, height, viewport.dpr])
 
   const [trail, onMove] = useTrailTexture({
     size: 512,
@@ -97,7 +100,7 @@ function TrailPlane({ gridSize, trailSize, maxAge, interpolate, easingFunction, 
         object={material}
         gridSize={gridSize}
         pixelColor={colorObj}
-        resolution={resolutionArr}
+        resolution={resolutionVec}
         mouseTrail={trail}
       />
     </mesh>

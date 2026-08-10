@@ -30,6 +30,8 @@ body::before {
     linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
   background-size: 40px 40px;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 /* Lenis smooth-scroll: recommended CSS to prevent layout/flash issues */
