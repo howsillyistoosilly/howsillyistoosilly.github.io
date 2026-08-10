@@ -39,17 +39,22 @@ const FRAGMENT_SHADER = `
       vec2 ptAspect = pt.xy * aspect;
       float dist = distance(cellCenterAspect, ptAspect);
       
-      float radius = uTrailRadius * (0.4 + 0.6 * pt.z);
-      float intensity = smoothstep(radius, 0.0, dist) * pt.z;
-      
-      trailStrength = max(trailStrength, intensity);
+      // Sharp pixel grid cell activation matching original step threshold
+      float radius = uTrailRadius * (0.35 + 0.65 * pt.z);
+      if (dist < radius) {
+        float cellAlpha = (1.0 - (dist / radius)) * pt.z;
+        trailStrength = max(trailStrength, cellAlpha);
+      }
     }
+
+    // Step cell strength for discrete retro pixel block rendering (no soft blob gradients!)
+    float discreteAlpha = step(0.08, trailStrength) * (ceil(trailStrength * 6.0) / 6.0);
 
     vec2 cellUv = fract(screenUv * uGridSize);
     float edge = min(min(cellUv.x, 1.0 - cellUv.x), min(cellUv.y, 1.0 - cellUv.y));
     float gridFactor = smoothstep(0.0, 0.04, edge);
 
-    gl_FragColor = vec4(uPixelColor, trailStrength * gridFactor);
+    gl_FragColor = vec4(uPixelColor, discreteAlpha * gridFactor);
   }
 `
 

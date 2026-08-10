@@ -11,7 +11,6 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
   const [isVisible, setIsVisible] = useState(false)
   
   const boundsRef = useRef({ top: 0, height: 0, vh: typeof window !== 'undefined' ? window.innerHeight : 800 })
-  const tiltRef = useRef({ targetRx: 0, targetRy: 0, currentRx: 0, currentRy: 0 })
 
   const updateBounds = useCallback(() => {
     if (!itemRef.current) return
@@ -53,6 +52,7 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
     return () => observer.disconnect()
   }, [updateBounds])
 
+  // Decoupled Lenis scroll tick: Updates scroll parallax transform smoothly on wrapper
   useLenis((lenis) => {
     const track = trackRef.current
     if (!track || !isVisible) return
@@ -67,32 +67,29 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
     const x = (progress - 0.5) * X_RANGE * direction
     const y = (0.5 - progress) * Y_RANGE
 
-    // Smoothly lerp tilt angles to eliminate mouse hover jitter
-    const tilt = tiltRef.current
-    tilt.currentRx += (tilt.targetRx - tilt.currentRx) * 0.1
-    tilt.currentRy += (tilt.targetRy - tilt.currentRy) * 0.1
-
-    const tiltStr = (Math.abs(tilt.currentRx) > 0.01 || Math.abs(tilt.currentRy) > 0.01)
-      ? ` perspective(800px) rotateX(${tilt.currentRx.toFixed(2)}deg) rotateY(${tilt.currentRy.toFixed(2)}deg)`
-      : ''
-
-    track.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)${tiltStr}`
+    track.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`
   })
 
+  // Hardware 3D Perspective Mouse Hover Tilt
   const handleMouseMove = (e) => {
     const track = trackRef.current
     if (!track) return
     const rect = track.getBoundingClientRect()
     const x = (e.clientX - rect.left) / rect.width - 0.5
     const y = (e.clientY - rect.top) / rect.height - 0.5
-
-    tiltRef.current.targetRy = x * 8
-    tiltRef.current.targetRx = -y * 8
+    
+    // Apply 3D perspective tilt to video element layer without affecting scroll position
+    const video = videoRef.current
+    if (video) {
+      video.style.transform = `perspective(800px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) scale3d(1.02, 1.02, 1)`
+    }
   }
 
   const handleMouseLeave = () => {
-    tiltRef.current.targetRx = 0
-    tiltRef.current.targetRy = 0
+    const video = videoRef.current
+    if (video) {
+      video.style.transform = 'perspective(800px) rotateY(0deg) rotateX(0deg) scale3d(1, 1, 1)'
+    }
   }
 
   return (
@@ -113,6 +110,11 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
           disablePictureInPicture
           disableRemotePlayback
           preload="metadata"
+          style={{
+            willChange: 'transform',
+            transition: 'transform 0.15s cubic-bezier(0.1, 0.9, 0.2, 1)',
+            transformStyle: 'preserve-3d',
+          }}
         >
           {webm && <source src={webm} type="video/webm" />}
           {mp4 && <source src={mp4} type="video/mp4" />}
