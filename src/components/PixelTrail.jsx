@@ -4,7 +4,6 @@ import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { shaderMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { useViewport } from '../context/ViewportContext'
-import { WebGLPerfCollector } from './PerfMonitor'
 import './PixelTrail.css'
 
 const TRAIL_POINTS = 18
@@ -83,7 +82,7 @@ const GpuSegmentTrailMaterial = shaderMaterial(
   FRAGMENT_SHADER
 )
 
-function GpuSegmentTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor, onWebGLStats }) {
+function GpuSegmentTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor }) {
   const { width, height } = useThree(s => s.size)
   const viewport = useThree(s => s.viewport)
   const { mouseRef } = useViewport()
@@ -147,20 +146,18 @@ function GpuSegmentTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor, o
   const scale = Math.max(viewport.width, viewport.height) / 2
 
   return (
-    <>
-      <WebGLPerfCollector onStats={onWebGLStats} />
-      <mesh scale={[scale, scale, 1]}>
-        <planeGeometry args={[2, 2]} />
-        <primitive
-          object={material}
-          uGridSize={gridSize}
-          uPixelColor={colorObj}
-          uResolution={resolutionVec}
-          uTrailRadius={trailSize}
-        />
-      </mesh>
-    </>
+    <mesh scale={[scale, scale, 1]}>
+      <planeGeometry args={[2, 2]} />
+      <primitive
+        object={material}
+        uGridSize={gridSize}
+        uPixelColor={colorObj}
+        uResolution={resolutionVec}
+        uTrailRadius={trailSize}
+      />
+    </mesh>
   )
+
 }
 
 function PixelTrailComponent({
@@ -168,7 +165,6 @@ function PixelTrailComponent({
   trailSize = 0.035,
   maxAge = 400,
   color = '#f0f0f0',
-  onWebGLStats = () => {},
 }) {
   const [ready, setReady] = useState(false)
   const [isTabVisible, setIsTabVisible] = useState(true)
@@ -234,7 +230,6 @@ function PixelTrailComponent({
           trailSize={trailSize}
           maxAge={maxAge}
           pixelColor={color}
-          onWebGLStats={onWebGLStats}
         />
       </Canvas>
     </div>
