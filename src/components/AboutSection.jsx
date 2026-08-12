@@ -19,7 +19,7 @@ function AboutSectionComponent() {
           </div>
         </div>
         <div className="about-right">
-          <p> hihiiii im adarsh, 20 now (and as long as father time allows) and this is my website. I love making games and learning cool stuff <br /> I love listening to music and try to make cool stuff happen</p>
+          <p> hihiii my name is adarsh (howsillyistoosilly) and i love creating stuff and learning new things. i was brought up around computers and now am doing my part to contribute to the digital world  <br /> other than that i love listening to music, learning how to draw and play the guitar among a pile of other hobbies and also love watching movies </p>
         </div>
       </div>
     </div>
