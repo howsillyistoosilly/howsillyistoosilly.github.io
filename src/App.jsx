@@ -15,6 +15,7 @@ import mousiee from './assets/mousie.png'
 import cubed from './assets/cubed.png'
 import controllerGlb from './assets/controller.glb'
 
+import finalFinalFinalWebm from './assets/FINALFINALFINAL.webm'
 import finalCompWebm from './assets/FinalComp.webm'
 
 
@@ -38,6 +39,7 @@ const PROJECTS = Object.freeze([
 ])
 
 const REEL = Object.freeze([
+  { title: 'Next Tech Lab', tag: 'motion graphics', webm: finalFinalFinalWebm, poster: '' },
   { title: 'Arythmatic', tag: 'motion graphics', webm: finalCompWebm, poster: poster1Image },
   { title: 'Next Tech Lab', tag: 'after effects', webm: ntlTrailerWebm, poster: '' },
   { title: '3D Renders', tag: 'Backrooms', webm: backroomsWebm, poster: '' },
@@ -81,9 +83,16 @@ export default function App() {
         <VideoParallax items={REEL} />
       </div>
 
-      <AboutSection />
+      <div className="info-grid">
+        <AboutSection />
+        <ContactSection />
+      </div>
 
-      <ContactSection />
+      <footer>
+        <span>howsillyistoosilly</span>
+        <span>© 2026</span>
+        <span>Adarsh Satish</span>
+      </footer>
     </ViewportProvider>
   )
 }

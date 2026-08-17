@@ -17,9 +17,14 @@ function AboutSectionComponent() {
             <div className="meta-row"><span className="meta-key">cert</span><span>Unity Jr. Programmer</span></div>
             <div className="meta-row"><span className="meta-key">lab</span><span>Next Tech Lab</span></div>
           </div>
-        </div>
+        </div> 
         <div className="about-right">
-          <p> hihiii my name is adarsh (howsillyistoosilly) and i love creating stuff and learning new things. i was brought up around computers and now am doing my part to contribute to the digital world  <br /> other than that i love listening to music, learning how to draw and play the guitar among a pile of other hobbies and also love watching movies </p>
+          <p>
+            hihiii my name is adarsh (howsillyistoosilly), and i love creating stuff and learning new things. i was brought up around computers, and now am doing my part to contribute to the digital world.
+          </p>
+          <p>
+            other than that, i love listening to music, learning how to draw and play the guitar, watching movies, and collecting a pile of other hobbies.
+          </p>
         </div>
       </div>
     </div>
