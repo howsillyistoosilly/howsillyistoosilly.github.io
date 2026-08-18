@@ -16,6 +16,7 @@ import monotone from './assets/monotone.png'
 import proceduralTerrain from './assets/procedural_terrain_generation.jpg'
 import mousiee from './assets/mousie.png'
 import cubed from './assets/cubed.png'
+import kinematicMovement from './assets/kinematic-movement.jpg'
 
 import finalFinalFinalWebm from './assets/FINALFINALFINAL.webm'
 import finalCompWebm from './assets/FinalComp.webm'
@@ -66,12 +67,12 @@ function moveItem(items, fromId, toId) {
 }
 
 const PROJECTS = Object.freeze([
-  { num:'01', type:'Gameplay Systems', title:'Kinematic Player Movement', desc:'A movement system using kinematic physics with variable gravity zones and jump height that changes based on button hold time. Added coyote time and input buffering for smoother, more responsive controls.', tags:['unity','c#','physics'], link:'#', linkLabel:'gameplay video', proj_screen:'https://media1.tenor.com/m/LyiynwDA18oAAAAd/hai.gif' },
+  { num:'01', type:'2D Platformer', title:'Monotone', desc:'A 2D platformer where you switch between dark and light modes — each reveals different platforms so you need to plan your route. Smooth transitions via shaders and particle effects. The mode swap is the mechanic.', tags:['unity','c#','shaders','particles'], link:'https://howsillyistoosilly.itch.io/monotone', linkLabel:'play on itch.io', proj_screen: monotone },
   { num:'02', type:'Shader Art', title:'Retro Snake', desc:'Classic snake with a full CRT visual treatment — scanlines, screen curvature, and chromatic aberration via custom shaders and post-processing to nail the old arcade monitor look.', tags:['unity','c#','hlsl','post-fx'], link:'https://howsillyistoosilly.itch.io/desnake', linkLabel:'play on itch.io', proj_screen: retroSnake },
-  { num:'03', type:'2D Platformer', title:'Monotone', desc:'A 2D platformer where you switch between dark and light modes — each reveals different platforms so you need to plan your route. Smooth transitions via shaders and particle effects. The mode swap is the mechanic.', tags:['unity','c#','shaders','particles'], link:'https://howsillyistoosilly.itch.io/monotone', linkLabel:'play on itch.io', proj_screen: monotone },
-  { num:'04', type:'Procedural Generation', title:'Procedural Terrain Generator', desc:"A voxel terrain system inspired by Minecraft and Terraria. Perlin noise for varied terrain shapes with chunk-based loading for performance. Built to go deep into Unity's mesh API.", tags:['unity','c#','mesh api','perlin noise'], link:'https://github.com/howsillyistoosilly/procedural-terrain-generator', linkLabel:'check it out', proj_screen: proceduralTerrain },
-  { num:'05', type:'Physics / Mobile', title:'Mousiee', desc:'Drag to set trajectory and velocity for a space mouse hunting cheese around the moon, then physics takes over. Real orbital mechanics for careful path planning.', tags:['unity','c#','orbital mechanics'], link:'https://github.com/howsillyistoosilly/Mousieeee', linkLabel:'check it out', proj_screen: mousiee },
-  { num:'06', type:'Game Jam · Puzzle', title:'Cubed', desc:'GMTK Game Jam 2025. You play as a cube solving puzzles with a time loop mechanic. Handled all level design and main menu UI. Ranked top 3,000 out of 9,500+ entries.', tags:['unity','level design','ui','game jam'], link:'https://macientosh.itch.io/cubed', linkLabel:'play on itch.io', proj_screen: cubed },
+  { num:'03', type:'Procedural Generation', title:'Procedural Terrain Generator', desc:"A voxel terrain system inspired by Minecraft and Terraria. Perlin noise for varied terrain shapes with chunk-based loading for performance. Built to go deep into Unity's mesh API.", tags:['unity','c#','mesh api','perlin noise'], link:'https://github.com/howsillyistoosilly/procedural-terrain-generator', linkLabel:'check it out', proj_screen: proceduralTerrain },
+  { num:'04', type:'Physics / Mobile', title:'Mousiee', desc:'Drag to set trajectory and velocity for a space mouse hunting cheese around the moon, then physics takes over. Real orbital mechanics for careful path planning.', tags:['unity','c#','orbital mechanics'], link:'https://github.com/howsillyistoosilly/Mousieeee', linkLabel:'check it out', proj_screen: mousiee },
+  { num:'05', type:'Game Jam · Puzzle', title:'Cubed', desc:'GMTK Game Jam 2025. You play as a cube solving puzzles with a time loop mechanic. Handled all level design and main menu UI. Ranked top 3,000 out of 9,500+ entries.', tags:['unity','level design','ui','game jam'], link:'https://macientosh.itch.io/cubed', linkLabel:'play on itch.io', proj_screen: cubed },
+  { num:'06', type:'Gameplay Systems', title:'Kinematic Player Movement', desc:'A movement system using kinematic physics with variable gravity zones and jump height that changes based on button hold time. Added coyote time and input buffering for smoother, more responsive controls.', tags:['unity','c#','physics'], link:'#', linkLabel:'gameplay video', proj_screen: kinematicMovement },
 ])
 
 const REEL = Object.freeze([
