@@ -59,7 +59,14 @@ function HalftoneReveal({ primaryPhoto, secondaryPhoto }) {
   )
 }
 
-function HeroSectionComponent({ primaryPhoto, secondaryPhoto }) {
+function HeroSectionComponent({ primaryPhoto, secondaryPhoto, onNavigateToBlog }) {
+  const handleBlogClick = (e) => {
+    e.preventDefault()
+    if (onNavigateToBlog) {
+      onNavigateToBlog()
+    }
+  }
+
   return (
     <div className="hero">
       <div className="hero-left">
@@ -70,6 +77,12 @@ function HeroSectionComponent({ primaryPhoto, secondaryPhoto }) {
           <p className="hero-desc">Just being a silly dev making stuff he finds cool and things he finds pretty.</p>
           <div className="chips">
             {HERO_SKILLS.map(t => <Chip key={t} label={t} />)}
+          </div>
+          <div className="hero-blog-cta">
+            <a href="/blog" onClick={handleBlogClick} className="hero-blog-btn">
+              <span className="hero-blog-btn__text">see what im saying (blog)</span>
+              <span className="hero-blog-btn__arrow">↗</span>
+            </a>
           </div>
         </div>
       </div>

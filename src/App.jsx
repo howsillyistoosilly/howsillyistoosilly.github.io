@@ -7,6 +7,7 @@ import ProjectCard from './components/ProjectCard'
 import VideoParallax from './components/VideoParallax'
 import AboutSection from './components/AboutSection'
 import ContactSection from './components/ContactSection'
+import BlogPage from './components/BlogPage'
 import adarsh from './assets/adarsh.jpeg'
 import adarsh1 from './assets/adarsh1.jpeg'
 
@@ -18,12 +19,8 @@ import cubed from './assets/cubed.png'
 
 import finalFinalFinalWebm from './assets/FINALFINALFINAL.webm'
 import finalCompWebm from './assets/FinalComp.webm'
-
-
 import ntlTrailerWebm from './assets/ntlTrailer.webm'
-
 import backroomsWebm from './assets/backrooms.webm'
-
 import poster1Image from './assets/poster1.jpeg'
 
 // Lazy load heavy Three.js / R3F Canvas components with Suspense
@@ -84,10 +81,54 @@ const REEL = Object.freeze([
   { title: '3D Renders', tag: 'Backrooms', webm: backroomsWebm, poster: '' },
 ])
 
+function checkIsBlogRoute() {
+  if (typeof window === 'undefined') return false
+  const host = window.location.hostname.toLowerCase()
+  const path = window.location.pathname.toLowerCase()
+  const hash = window.location.hash.toLowerCase()
+  return (
+    host.startsWith('blog.') ||
+    path === '/blog' ||
+    path.startsWith('/blog/') ||
+    hash === '#blog' ||
+    hash === '#/blog'
+  )
+}
+
 export default function App() {
+  const [isBlog, setIsBlog] = useState(checkIsBlogRoute)
   const photosById = useMemo(() => new Map(PHOTOS.map(photo => [photo.id, photo])), [])
   const [photoOrder, setPhotoOrder] = useState(() => getInitialPhotoOrder(PHOTOS))
   const [draggedPhotoId, setDraggedPhotoId] = useState(null)
+
+  useEffect(() => {
+    const updateRoute = () => {
+      setIsBlog(checkIsBlogRoute())
+    }
+
+    window.addEventListener('popstate', updateRoute)
+    window.addEventListener('hashchange', updateRoute)
+    return () => {
+      window.removeEventListener('popstate', updateRoute)
+      window.removeEventListener('hashchange', updateRoute)
+    }
+  }, [])
+
+  const navigateToBlog = () => {
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', '/blog')
+      setIsBlog(true)
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+  }
+
+  const navigateToHome = () => {
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', '/')
+      setIsBlog(false)
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+  }
 
   useEffect(() => {
     window.localStorage.setItem(PHOTO_ORDER_KEY, JSON.stringify(photoOrder))
@@ -124,71 +165,78 @@ export default function App() {
         />
       </Suspense>
 
-      <Navbar />
+      {isBlog ? (
+        <BlogPage onNavigateHome={navigateToHome} />
+      ) : (
+        <>
+          <Navbar onNavigateToBlog={navigateToBlog} />
 
-      <HeroSection
-        primaryPhoto={adarsh}
-        secondaryPhoto={adarsh1}
-      />
+          <HeroSection
+            primaryPhoto={adarsh}
+            secondaryPhoto={adarsh1}
+            onNavigateToBlog={navigateToBlog}
+          />
 
-      <div className="section" id="projects">
-        <div className="sec-head">
-          <span className="sec-num">01 — work</span>
-          <h2 className="sec-title">Things I've <em>Built</em></h2>
-        </div>
-        <div className="proj-list">
-          {PROJECTS.map(p => <ProjectCard key={p.num} {...p} />)}
-        </div>
-      </div>
-
-      <div className="section" id="motion">
-        <div className="sec-head">
-          <span className="sec-num">02 — motion</span>
-          <h2 className="sec-title">Motion & <em>Video</em></h2>
-        </div>
-        <VideoParallax items={REEL} />
-      </div>
-
-      <div className="section" id="photos">
-        <div className="sec-head">
-          <span className="sec-num">03 — photos</span>
-          <div className="sec-head-right">
-            <h2 className="sec-title">Photography</h2>
-            <span className="photos-hint">drag tiles to reorder</span>
+          <div className="section" id="projects">
+            <div className="sec-head">
+              <span className="sec-num">01 — work</span>
+              <h2 className="sec-title">Things I've <em>Built</em></h2>
+            </div>
+            <div className="proj-list">
+              {PROJECTS.map(p => <ProjectCard key={p.num} {...p} />)}
+            </div>
           </div>
-        </div>
-        <div className="photos-masonry">
-          {orderedPhotos.map((photo) => (
-            <figure
-              className={`photo-tile${draggedPhotoId === photo.id ? ' photo-tile--dragging' : ''}`}
-              key={photo.id}
-              draggable
-              onDragStart={handleDragStart(photo.id)}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={handleDrop(photo.id)}
-              onDragEnd={() => setDraggedPhotoId(null)}
-            >
-              <img
-                src={photo.src}
-                alt={photo.alt}
-                loading="lazy"
-                decoding="async"
-              />
-            </figure>
-          ))}
-        </div>
-      </div>
 
-      <div className="info-grid">
-        <AboutSection />
-        <ContactSection />
-      </div>
+          <div className="section" id="motion">
+            <div className="sec-head">
+              <span className="sec-num">02 — motion</span>
+              <h2 className="sec-title">Motion & <em>Video</em></h2>
+            </div>
+            <VideoParallax items={REEL} />
+          </div>
 
-      <footer>
-        <span>howsillyistoosilly</span>
-        <span>© 2026</span>
-        <span>Adarsh Satish</span>
-      </footer>
+          <div className="section" id="photos">
+            <div className="sec-head">
+              <span className="sec-num">03 — photos</span>
+              <div className="sec-head-right">
+                <h2 className="sec-title">Photography</h2>
+                <span className="photos-hint">drag tiles to reorder</span>
+              </div>
+            </div>
+            <div className="photos-masonry">
+              {orderedPhotos.map((photo) => (
+                <figure
+                  className={`photo-tile${draggedPhotoId === photo.id ? ' photo-tile--dragging' : ''}`}
+                  key={photo.id}
+                  draggable
+                  onDragStart={handleDragStart(photo.id)}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={handleDrop(photo.id)}
+                  onDragEnd={() => setDraggedPhotoId(null)}
+                >
+                  <img
+                    src={photo.src}
+                    alt={photo.alt}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </figure>
+              ))}
+            </div>
+          </div>
+
+          <div className="info-grid">
+            <AboutSection />
+            <ContactSection />
+          </div>
+
+          <footer>
+            <span>howsillyistoosilly</span>
+            <span>© 2026</span>
+            <span>Adarsh Satish</span>
+          </footer>
+        </>
+      )}
     </ViewportProvider>
   )
 }

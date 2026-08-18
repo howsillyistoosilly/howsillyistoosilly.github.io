@@ -30,6 +30,9 @@ export default defineConfig({
             if (id.includes('lenis')) {
               return 'vendor-lenis'
             }
+            if (id.includes('@sanity') || id.includes('@portabletext')) {
+              return 'vendor-sanity'
+            }
             if (id.includes('react')) {
               return 'vendor-react'
             }
