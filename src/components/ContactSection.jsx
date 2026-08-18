@@ -4,7 +4,7 @@ function ContactSectionComponent() {
   return (
     <div className="section" id="contact">
         <div className="sec-head">
-          <span className="sec-num">04 — contact</span>
+          <span className="sec-num">05 — contact</span>
           <h2 className="sec-title">Say <em>Hello</em></h2>
         </div>
         <div className="contact-wrap">

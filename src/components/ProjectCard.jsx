@@ -15,6 +15,8 @@ function ProjectCardComponent({ num, type, title, desc, tags, link, linkLabel, p
   const rectRef = useRef({ left: 0, top: 0, width: 1, height: 1 })
   const tiltTarget = useRef({ rotX: 0, rotY: 0, mouseX: 50, mouseY: 50 })
   const tiltCurrent = useRef({ rotX: 0, rotY: 0, mouseX: 50, mouseY: 50 })
+  const moveFrameRef = useRef(0)
+  const movePointRef = useRef({ x: 50, y: 50 })
 
   const updateRect = useCallback(() => {
     if (!cardRef.current) return
@@ -24,7 +26,10 @@ function ProjectCardComponent({ num, type, title, desc, tags, link, linkLabel, p
 
   useEffect(() => {
     window.addEventListener('resize', updateRect, { passive: true })
-    return () => window.removeEventListener('resize', updateRect)
+    return () => {
+      window.removeEventListener('resize', updateRect)
+      if (moveFrameRef.current) cancelAnimationFrame(moveFrameRef.current)
+    }
   }, [updateRect])
 
   // Continuous smooth inertia lerp loop during hover
@@ -57,16 +62,24 @@ function ProjectCardComponent({ num, type, title, desc, tags, link, linkLabel, p
 
   const handleMouseMove = useCallback((e) => {
     const { left, top, width, height } = rectRef.current
-    const px = (e.clientX - left) / width
-    const py = (e.clientY - top) / height
+    movePointRef.current.x = (e.clientX - left) / width
+    movePointRef.current.y = (e.clientY - top) / height
 
-    const x = px - 0.5
-    const y = py - 0.5
+    if (moveFrameRef.current) return
 
-    tiltTarget.current.rotY = x * 8
-    tiltTarget.current.rotX = -y * 8
-    tiltTarget.current.mouseX = px * 100
-    tiltTarget.current.mouseY = py * 100
+    moveFrameRef.current = requestAnimationFrame(() => {
+      moveFrameRef.current = 0
+      const px = movePointRef.current.x
+      const py = movePointRef.current.y
+
+      const x = px - 0.5
+      const y = py - 0.5
+
+      tiltTarget.current.rotY = x * 8
+      tiltTarget.current.rotX = -y * 8
+      tiltTarget.current.mouseX = px * 100
+      tiltTarget.current.mouseY = py * 100
+    })
   }, [])
 
   const handleMouseEnter = useCallback(() => {

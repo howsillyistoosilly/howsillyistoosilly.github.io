@@ -15,6 +15,8 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
   const tiltTarget = useRef({ rotX: 0, rotY: 0, mouseX: 50, mouseY: 50 })
   const tiltCurrent = useRef({ rotX: 0, rotY: 0, mouseX: 50, mouseY: 50 })
   const rafId = useRef(null)
+  const moveFrameRef = useRef(0)
+  const movePointRef = useRef({ x: 50, y: 50 })
   
   const boundsRef = useRef({ top: 0, height: 0, vh: typeof window !== 'undefined' ? window.innerHeight : 800 })
 
@@ -35,7 +37,10 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
   useEffect(() => {
     updateBounds()
     window.addEventListener('resize', updateBounds, { passive: true })
-    return () => window.removeEventListener('resize', updateBounds)
+    return () => {
+      window.removeEventListener('resize', updateBounds)
+      if (moveFrameRef.current) cancelAnimationFrame(moveFrameRef.current)
+    }
   }, [updateBounds])
 
   useEffect(() => {
@@ -115,16 +120,24 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
 
   const handleMouseMove = useCallback((e) => {
     const { left, top, width, height } = trackRectRef.current
-    const px = (e.clientX - left) / width
-    const py = (e.clientY - top) / height
+    movePointRef.current.x = (e.clientX - left) / width
+    movePointRef.current.y = (e.clientY - top) / height
 
-    const x = px - 0.5
-    const y = py - 0.5
+    if (moveFrameRef.current) return
 
-    tiltTarget.current.rotY = x * 10
-    tiltTarget.current.rotX = -y * 10
-    tiltTarget.current.mouseX = px * 100
-    tiltTarget.current.mouseY = py * 100
+    moveFrameRef.current = requestAnimationFrame(() => {
+      moveFrameRef.current = 0
+      const px = movePointRef.current.x
+      const py = movePointRef.current.y
+
+      const x = px - 0.5
+      const y = py - 0.5
+
+      tiltTarget.current.rotY = x * 10
+      tiltTarget.current.rotX = -y * 10
+      tiltTarget.current.mouseX = px * 100
+      tiltTarget.current.mouseY = py * 100
+    })
   }, [])
 
   const handleMouseEnter = useCallback(() => {

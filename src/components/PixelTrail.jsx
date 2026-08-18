@@ -6,7 +6,7 @@ import * as THREE from 'three'
 import { useViewport } from '../context/ViewportContext'
 import './PixelTrail.css'
 
-const TRAIL_POINTS = 18
+const TRAIL_POINTS = 12
 
 // --- 100% GPU Chronological Line-Segment Pixel Trail Shader --------------
 
@@ -161,17 +161,36 @@ function GpuSegmentTrailPlane({ gridSize, trailSize, maxAge = 400, pixelColor })
 }
 
 function PixelTrailComponent({
-  gridSize = 150,
+  gridSize = 120,
   trailSize = 0.035,
   maxAge = 400,
   color = '#f0f0f0',
 }) {
   const [ready, setReady] = useState(false)
   const [isTabVisible, setIsTabVisible] = useState(true)
+  const [isEnabled, setIsEnabled] = useState(true)
   const [size, setSize] = useState(() => ({
     width: typeof window !== 'undefined' ? window.innerWidth : 0,
     height: typeof window !== 'undefined' ? window.innerHeight : 0,
   }))
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const pointerMedia = window.matchMedia('(pointer: fine) and (hover: hover)')
+
+    const updateEnabled = () => {
+      setIsEnabled(!media.matches && pointerMedia.matches)
+    }
+
+    updateEnabled()
+    media.addEventListener('change', updateEnabled)
+    pointerMedia.addEventListener('change', updateEnabled)
+
+    return () => {
+      media.removeEventListener('change', updateEnabled)
+      pointerMedia.removeEventListener('change', updateEnabled)
+    }
+  }, [])
 
   useEffect(() => {
     let timer
@@ -205,33 +224,35 @@ function PixelTrailComponent({
 
   return (
     <div className={`pixel-trail-root${ready ? ' pixel-trail-ready' : ''}`}>
-      <Canvas
-        id="pixel-trail-canvas"
-        className="pixel-canvas"
-        flat
-        frameloop={isTabVisible ? 'always' : 'never'}
-        style={{
-          background: 'transparent',
-          pointerEvents: 'none',
-          width: size.width,
-          height: size.height,
-        }}
-        gl={{
-          alpha: true,
-          premultipliedAlpha: true,
-          antialias: false,
-          preserveDrawingBuffer: false,
-          powerPreference: 'high-performance',
-        }}
-        onCreated={handleCreated}
-      >
-        <GpuSegmentTrailPlane
-          gridSize={gridSize}
-          trailSize={trailSize}
-          maxAge={maxAge}
-          pixelColor={color}
-        />
-      </Canvas>
+      {isEnabled && (
+        <Canvas
+          id="pixel-trail-canvas"
+          className="pixel-canvas"
+          flat
+          frameloop={isTabVisible ? 'always' : 'never'}
+          style={{
+            background: 'transparent',
+            pointerEvents: 'none',
+            width: size.width,
+            height: size.height,
+          }}
+          gl={{
+            alpha: true,
+            premultipliedAlpha: true,
+            antialias: false,
+            preserveDrawingBuffer: false,
+            powerPreference: 'high-performance',
+          }}
+          onCreated={handleCreated}
+        >
+          <GpuSegmentTrailPlane
+            gridSize={gridSize}
+            trailSize={trailSize}
+            maxAge={maxAge}
+            pixelColor={color}
+          />
+        </Canvas>
+      )}
     </div>
   )
 }

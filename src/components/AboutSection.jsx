@@ -4,7 +4,7 @@ function AboutSectionComponent() {
   return (
     <div className="section" id="about">
       <div className="sec-head">
-        <span className="sec-num">03 — about</span>
+        <span className="sec-num">04 — about</span>
         <h2 className="sec-title">About <em>Me</em></h2>
       </div>
       <div className="about-wrap">
