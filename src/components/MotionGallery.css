@@ -1,0 +1,1057 @@
+/* ==========================================================================
+   MOTION VIDEO GALLERY & CINEMA PLAYER STYLING
+   Aesthetic: Deep Obsidian Black, Subtle Glassmorphism, DM Mono Accents
+   ========================================================================== */
+
+/* Standalone Page Layout */
+.motion-page {
+  min-height: 100vh;
+  background: var(--bg, #111111);
+  color: var(--fg, #ffffff);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10;
+  overflow-x: hidden;
+}
+
+.motion-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 3rem;
+  background: rgba(17, 17, 17, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+}
+
+.motion-nav__left {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.motion-nav-brand-btn {
+  background: none;
+  border: none;
+  color: var(--fg, #ffffff);
+  font-family: 'SF Pro Display', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  letter-spacing: -0.2px;
+  transition: opacity 0.2s;
+}
+
+.motion-nav-brand-btn:hover {
+  opacity: 0.8;
+}
+
+.motion-nav-brand-btn em {
+  font-style: normal;
+  color: var(--mid, #888888);
+}
+
+.motion-nav__badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+
+.motion-nav__right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.motion-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--fg, #ffffff);
+  padding: 0.45rem 0.95rem;
+  border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.motion-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Modal Backdrop Mode */
+.motion-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(8, 8, 8, 0.88);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+  animation: motionFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes motionFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.motion-modal-container {
+  width: 100%;
+  max-width: 1320px;
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  background: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.9), 0 0 40px rgba(255, 255, 255, 0.03);
+  overflow-y: auto;
+  position: relative;
+}
+
+.motion-modal-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1.4rem;
+  background: rgba(20, 20, 20, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.motion-modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.motion-modal-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--mid, #888888);
+}
+
+.motion-modal-heading {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: -0.2px;
+}
+
+.motion-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.motion-modal-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ebebeb;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.motion-modal-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.motion-modal-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 0.4rem 0.85rem;
+  border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.motion-modal-close-btn:hover {
+  background: #ff4757;
+  border-color: #ff4757;
+  color: #fff;
+}
+
+/* Main Motion Layout Body */
+.motion-main {
+  flex: 1;
+  max-width: 1360px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+/* ==========================================================================
+   CINEMA PLAYER SECTION
+   ========================================================================== */
+
+.cinema-container {
+  position: relative;
+  width: 100%;
+  background: #050505;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  user-select: none;
+}
+
+.cinema-container--fullscreen {
+  border-radius: 0;
+  border: none;
+  max-height: 100vh;
+}
+
+.cinema-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 72vh;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.cinema-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Big Splash Play/Pause Ripple */
+.cinema-splash-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(15, 15, 15, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 15;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.cinema-splash-btn:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+  background: rgba(255, 255, 255, 0.95);
+  color: #000;
+  border-color: #fff;
+}
+
+.cinema-splash-btn svg {
+  width: 28px;
+  height: 28px;
+  fill: currentColor;
+}
+
+/* Audio Status Overlay Badge */
+.cinema-audio-badge {
+  position: absolute;
+  top: 1.2rem;
+  left: 1.4rem;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.8rem;
+  background: rgba(10, 10, 10, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  color: #fff;
+  pointer-events: none;
+  opacity: 0.9;
+  transition: opacity 0.3s;
+}
+
+.cinema-audio-badge--muted {
+  color: #ff9f43;
+  border-color: rgba(255, 159, 67, 0.4);
+}
+
+.cinema-audio-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2ed573;
+  box-shadow: 0 0 8px #2ed573;
+}
+
+.cinema-audio-badge--muted .cinema-audio-badge-dot {
+  background: #ff9f43;
+  box-shadow: 0 0 8px #ff9f43;
+}
+
+/* Equalizer Bars Animation */
+.equalizer-anim {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.equalizer-bar {
+  width: 2.5px;
+  background: #fff;
+  border-radius: 1px;
+  animation: eqBounce 1s ease-in-out infinite alternate;
+}
+
+.equalizer-bar:nth-child(1) { height: 40%; animation-delay: 0.1s; }
+.equalizer-bar:nth-child(2) { height: 90%; animation-delay: 0.3s; }
+.equalizer-bar:nth-child(3) { height: 60%; animation-delay: 0.15s; }
+.equalizer-bar:nth-child(4) { height: 100%; animation-delay: 0.45s; }
+
+@keyframes eqBounce {
+  0% { transform: scaleY(0.3); }
+  100% { transform: scaleY(1); }
+}
+
+/* ==========================================================================
+   CUSTOM PLAYER CONTROLS BAR
+   ========================================================================== */
+
+.cinema-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 25;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.6) 65%, transparent 100%);
+  padding: 2.5rem 1.4rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.cinema-controls--hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+}
+
+/* Scrub Bar & Tooltip */
+.cinema-scrub-container {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.cinema-scrub-track {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 2px;
+  transition: height 0.15s ease;
+  overflow: visible;
+}
+
+.cinema-scrub-container:hover .cinema-scrub-track {
+  height: 6px;
+}
+
+.cinema-scrub-buffered {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.cinema-scrub-progress {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: #ffffff;
+  border-radius: 2px;
+  pointer-events: none;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+}
+
+.cinema-scrub-thumb {
+  position: absolute;
+  top: 50%;
+  right: -6px;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.8), 0 0 12px rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.cinema-scrub-container:hover .cinema-scrub-thumb {
+  opacity: 1;
+}
+
+/* Hover Scrubber Tooltip */
+.cinema-scrub-tooltip {
+  position: absolute;
+  bottom: 22px;
+  transform: translateX(-50%);
+  background: rgba(12, 12, 12, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+/* Control Buttons Row */
+.cinema-ctrl-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cinema-ctrl-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cinema-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 4px;
+  transition: color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+
+.cinema-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.05);
+}
+
+.cinema-btn--active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+}
+
+.cinema-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+/* Volume Control Strip */
+.cinema-vol-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cinema-vol-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 76px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  transition: width 0.2s ease;
+}
+
+.cinema-vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.7);
+  transition: transform 0.15s ease;
+}
+
+.cinema-vol-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+}
+
+.cinema-vol-slider::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  border: none;
+}
+
+/* Time Display */
+.cinema-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+.cinema-time-cur {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* Speed Selector Menu */
+.cinema-speed-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 0.25rem 0.55rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cinema-speed-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Keyboard hint chip */
+.cinema-kbd-hint {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--mid, #888888);
+  letter-spacing: 0.5px;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* ==========================================================================
+   VIDEO INFO & DETAILS BAR
+   ========================================================================== */
+
+.motion-info-panel {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  padding: 1.5rem 1.8rem;
+  background: rgba(20, 20, 20, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  align-items: start;
+}
+
+.motion-info-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.motion-info-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.motion-info-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--mid, #888888);
+}
+
+.motion-info-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+}
+
+.motion-info-title {
+  font-size: 1.6rem;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+  color: #ffffff;
+}
+
+.motion-info-desc {
+  font-size: 0.84rem;
+  line-height: 1.7;
+  color: #cccccc;
+  max-width: 780px;
+}
+
+.motion-info-chips {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
+
+.motion-info-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.motion-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.motion-action-btn:hover {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.motion-action-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.motion-action-toast {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: #2ed573;
+  letter-spacing: 0.5px;
+  animation: fadeIn 0.2s ease;
+}
+
+/* ==========================================================================
+   ALL-VIDEOS GALLERY & PLAYLIST GRID
+   ========================================================================== */
+
+.motion-gallery-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.motion-gallery-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+}
+
+.motion-gallery-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  color: #ffffff;
+}
+
+.motion-gallery-title em {
+  font-style: italic;
+  color: var(--mid, #888888);
+}
+
+.motion-gallery-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  color: var(--mid, #888888);
+}
+
+.motion-playlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.motion-playlist-card {
+  position: relative;
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+  outline: none;
+}
+
+.motion-playlist-card:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+
+.motion-playlist-card--active {
+  border-color: #ffffff;
+  background: #1a1a1a;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.1), 0 12px 30px rgba(0, 0, 0, 0.7);
+}
+
+.motion-card-thumb-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  overflow: hidden;
+}
+
+.motion-card-thumb-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.85);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+}
+
+.motion-playlist-card:hover .motion-card-thumb-video {
+  filter: brightness(1);
+  transform: scale(1.04);
+}
+
+.motion-card-play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.motion-playlist-card:hover .motion-card-play-overlay {
+  opacity: 1;
+}
+
+.motion-card-play-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  transform: scale(0.9);
+  transition: transform 0.2s ease;
+}
+
+.motion-playlist-card:hover .motion-card-play-icon {
+  transform: scale(1);
+}
+
+.motion-card-play-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  margin-left: 2px;
+}
+
+.motion-card-now-playing-badge {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 5;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.motion-card-body {
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.motion-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.motion-card-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--mid, #888888);
+}
+
+.motion-card-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--mid, #888888);
+}
+
+.motion-playlist-card--active .motion-card-tag {
+  color: #ffffff;
+}
+
+.motion-card-title {
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   HOMEPAGE HOVER INTERACTION OVERLAY (On Reel Cards)
+   ========================================================================== */
+
+.reel-card-click-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.25s ease;
+}
+
+.reel-track--hovered .reel-card-click-overlay {
+  opacity: 1;
+}
+
+.reel-card-cta-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  transform: translateY(6px);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reel-track--hovered .reel-card-cta-group {
+  transform: translateY(0);
+}
+
+.reel-card-play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8), 0 0 15px rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
+}
+
+.reel-card-play-btn:hover {
+  transform: scale(1.05);
+  background: #f0f0f0;
+}
+
+.reel-card-play-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.reel-card-popout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(15, 15, 15, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.reel-card-popout-btn:hover {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  transform: scale(1.08);
+}
+
+.reel-card-popout-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+/* ==========================================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  .motion-nav {
+    padding: 0.9rem 1.5rem;
+  }
+  .motion-main {
+    padding: 1.5rem 1.2rem 3rem;
+    gap: 1.8rem;
+  }
+  .motion-info-panel {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+  .motion-info-right {
+    align-items: flex-start;
+  }
+  .cinema-vol-slider {
+    width: 50px;
+  }
+  .cinema-kbd-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .motion-modal-backdrop {
+    padding: 0.5rem;
+  }
+  .motion-modal-topbar {
+    padding: 0.6rem 0.8rem;
+  }
+  .cinema-controls {
+    padding: 1.5rem 0.8rem 0.75rem;
+  }
+  .cinema-time {
+    font-size: 0.65rem;
+  }
+  .motion-playlist-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,10 +1,11 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react'
 import './App.css'
 import { ViewportProvider } from './context/ViewportContext'
 import Navbar from './components/Navbar'
 import HeroSection from './components/HeroSection'
 import ProjectCard from './components/ProjectCard'
 import VideoParallax from './components/VideoParallax'
+import MotionGallery from './components/MotionGallery'
 import AboutSection from './components/AboutSection'
 import ContactSection from './components/ContactSection'
 import BlogPage from './components/BlogPage'
@@ -75,36 +76,91 @@ const PROJECTS = Object.freeze([
   { num:'06', type:'Gameplay Systems', title:'Kinematic Player Movement', desc:'A movement system using kinematic physics with variable gravity zones and jump height that changes based on button hold time. Added coyote time and input buffering for smoother, more responsive controls.', tags:['unity','c#','physics'], link:'#', linkLabel:'gameplay video', proj_screen: kinematicMovement },
 ])
 
-const REEL = Object.freeze([
-  { title: 'Next Tech Lab', tag: 'motion graphics', webm: finalFinalFinalWebm, poster: '' },
-  { title: 'Arythmatic', tag: 'motion graphics', webm: finalCompWebm, poster: poster1Image },
-  { title: 'Next Tech Lab', tag: 'after effects', webm: ntlTrailerWebm, poster: '' },
-  { title: '3D Renders', tag: 'Backrooms', webm: backroomsWebm, poster: '' },
+export const REEL = Object.freeze([
+  {
+    id: 'next-tech-lab-branding',
+    num: '01',
+    title: 'Next Tech Lab',
+    tag: 'motion graphics',
+    webm: finalFinalFinalWebm,
+    poster: '',
+    desc: 'Kinetic typography, brand identity, and stylized 3D motion design created for Next Tech Lab. Dynamic camera tracking, rhythmic pacing, and high-energy motion aesthetics.',
+    software: ['After Effects', 'Cinema 4D', 'Illustrator', 'Sound Design'],
+  },
+  {
+    id: 'arythmatic',
+    num: '02',
+    title: 'Arythmatic',
+    tag: 'motion graphics',
+    webm: finalCompWebm,
+    poster: poster1Image,
+    desc: 'High-contrast abstract motion study exploring algorithmic typography, distortion displacement, chromatic aberration, and synchronized beat drops.',
+    software: ['After Effects', 'Premiere Pro', 'Photoshop'],
+  },
+  {
+    id: 'next-tech-lab-trailer',
+    num: '03',
+    title: 'Next Tech Lab Trailer',
+    tag: 'after effects',
+    webm: ntlTrailerWebm,
+    poster: '',
+    desc: 'Cinematic recruitment and showcase trailer featuring sound-reactive glitch transitions, fast-paced compositing, and dynamic graphic overlays.',
+    software: ['After Effects', 'Sound Design', 'Color Grading'],
+  },
+  {
+    id: 'backrooms-3d',
+    num: '04',
+    title: '3D Renders — Backrooms',
+    tag: 'Backrooms / 3D',
+    webm: backroomsWebm,
+    poster: '',
+    desc: 'Liminal space atmospheric environment rendering and horror animation. Procedural fluorescent lighting flicker, VHS analog tracking noise, and spatial audio reverberation.',
+    software: ['Blender', 'Cycles', 'After Effects', 'Audio Design'],
+  },
 ])
 
-function checkIsBlogRoute() {
-  if (typeof window === 'undefined') return false
+function getRouteState() {
+  if (typeof window === 'undefined') return { page: 'home', param: null }
   const host = window.location.hostname.toLowerCase()
   const path = window.location.pathname.toLowerCase()
   const hash = window.location.hash.toLowerCase()
-  return (
+  const searchParams = new URLSearchParams(window.location.search)
+
+  if (
     host.startsWith('blog.') ||
     path === '/blog' ||
     path.startsWith('/blog/') ||
     hash === '#blog' ||
     hash === '#/blog'
-  )
+  ) {
+    return { page: 'blog', param: null }
+  }
+
+  if (
+    path === '/motion' ||
+    path.startsWith('/motion/') ||
+    path === '/videos' ||
+    path.startsWith('/videos/') ||
+    hash === '#motion-gallery' ||
+    hash === '#gallery'
+  ) {
+    const videoParam = searchParams.get('video') || (path.startsWith('/motion/') ? path.replace('/motion/', '') : null)
+    return { page: 'motion', param: videoParam }
+  }
+
+  return { page: 'home', param: null }
 }
 
 export default function App() {
-  const [isBlog, setIsBlog] = useState(checkIsBlogRoute)
+  const [routeState, setRouteState] = useState(getRouteState)
+  const [activeMotionModal, setActiveMotionModal] = useState({ isOpen: false, videoIndex: 0, videoId: null })
   const photosById = useMemo(() => new Map(PHOTOS.map(photo => [photo.id, photo])), [])
   const [photoOrder, setPhotoOrder] = useState(() => getInitialPhotoOrder(PHOTOS))
   const [draggedPhotoId, setDraggedPhotoId] = useState(null)
 
   useEffect(() => {
     const updateRoute = () => {
-      setIsBlog(checkIsBlogRoute())
+      setRouteState(getRouteState())
     }
 
     window.addEventListener('popstate', updateRoute)
@@ -115,21 +171,54 @@ export default function App() {
     }
   }, [])
 
-  const navigateToBlog = () => {
+  const navigateToBlog = useCallback(() => {
     if (typeof window !== 'undefined') {
       window.history.pushState({}, '', '/blog')
-      setIsBlog(true)
+      setRouteState({ page: 'blog', param: null })
       window.scrollTo({ top: 0, behavior: 'instant' })
     }
-  }
+  }, [])
 
-  const navigateToHome = () => {
+  const navigateToHome = useCallback(() => {
     if (typeof window !== 'undefined') {
       window.history.pushState({}, '', '/')
-      setIsBlog(false)
+      setRouteState({ page: 'home', param: null })
+      setActiveMotionModal({ isOpen: false, videoIndex: 0, videoId: null })
       window.scrollTo({ top: 0, behavior: 'instant' })
     }
-  }
+  }, [])
+
+  const navigateToMotion = useCallback((videoIdOrIndex = 0) => {
+    if (typeof window !== 'undefined') {
+      const videoParam = typeof videoIdOrIndex === 'string' ? videoIdOrIndex : (REEL[videoIdOrIndex]?.id || '0')
+      window.history.pushState({}, '', `/motion?video=${encodeURIComponent(videoParam)}`)
+      setRouteState({ page: 'motion', param: videoParam })
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+  }, [])
+
+  const handleOpenGalleryModal = useCallback((indexOrId) => {
+    const idx = typeof indexOrId === 'number' ? indexOrId : REEL.findIndex(v => v.id === indexOrId)
+    const validIdx = idx !== -1 ? idx : 0
+    const videoId = REEL[validIdx]?.id || String(validIdx)
+    setActiveMotionModal({ isOpen: true, videoIndex: validIdx, videoId })
+  }, [])
+
+  const handleCloseGalleryModal = useCallback(() => {
+    setActiveMotionModal({ isOpen: false, videoIndex: 0, videoId: null })
+    if (typeof window !== 'undefined' && window.location.pathname === '/') {
+      const cleanUrl = new URL(window.location.href)
+      cleanUrl.searchParams.delete('video')
+      window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.hash)
+    }
+  }, [])
+
+  const handleOpenSeparateTab = useCallback((videoIdOrIndex) => {
+    const videoParam = typeof videoIdOrIndex === 'string' ? videoIdOrIndex : (REEL[videoIdOrIndex]?.id || videoIdOrIndex)
+    if (typeof window !== 'undefined') {
+      window.open(`/motion?video=${encodeURIComponent(videoParam)}`, '_blank', 'noopener,noreferrer')
+    }
+  }, [])
 
   useEffect(() => {
     window.localStorage.setItem(PHOTO_ORDER_KEY, JSON.stringify(photoOrder))
@@ -166,11 +255,22 @@ export default function App() {
         />
       </Suspense>
 
-      {isBlog ? (
+      {routeState.page === 'blog' ? (
         <BlogPage onNavigateHome={navigateToHome} />
+      ) : routeState.page === 'motion' ? (
+        <MotionGallery
+          videos={REEL}
+          initialVideoId={routeState.param}
+          onNavigateHome={navigateToHome}
+          onNavigateToBlog={navigateToBlog}
+        />
       ) : (
         <>
-          <Navbar onNavigateToBlog={navigateToBlog} />
+          <Navbar
+            onNavigateToBlog={navigateToBlog}
+            onNavigateToMotion={() => handleOpenGalleryModal(0)}
+            onNavigateHome={navigateToHome}
+          />
 
           <HeroSection
             primaryPhoto={adarsh}
@@ -191,9 +291,16 @@ export default function App() {
           <div className="section" id="motion">
             <div className="sec-head">
               <span className="sec-num">02 — motion</span>
-              <h2 className="sec-title">Motion & <em>Video</em></h2>
+              <div className="sec-head-right">
+                <h2 className="sec-title">Motion & <em>Video</em></h2>
+                <span className="photos-hint">click to play with audio · full gallery</span>
+              </div>
             </div>
-            <VideoParallax items={REEL} />
+            <VideoParallax
+              items={REEL}
+              onOpenGallery={handleOpenGalleryModal}
+              onOpenSeparateTab={handleOpenSeparateTab}
+            />
           </div>
 
           <div className="section" id="photos">
@@ -236,8 +343,22 @@ export default function App() {
             <span>© 2026</span>
             <span>Adarsh Satish</span>
           </footer>
+
+          {/* Modal Theater Mode when clicking video from home */}
+          {activeMotionModal.isOpen && (
+            <MotionGallery
+              isModal
+              videos={REEL}
+              initialVideoIndex={activeMotionModal.videoIndex}
+              initialVideoId={activeMotionModal.videoId}
+              onClose={handleCloseGalleryModal}
+              onNavigateHome={navigateToHome}
+              onNavigateToBlog={navigateToBlog}
+            />
+          )}
         </>
       )}
     </ViewportProvider>
   )
 }
+

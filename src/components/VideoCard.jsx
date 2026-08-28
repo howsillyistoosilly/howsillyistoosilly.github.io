@@ -4,7 +4,19 @@ import { useLenis } from 'lenis/react'
 const X_RANGE = 140
 const Y_RANGE = 70
 
-function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 }) {
+function VideoCardComponent({
+  id,
+  index = 0,
+  title,
+  tag,
+  webm,
+  mp4,
+  src,
+  poster,
+  direction = 1,
+  onOpenGallery,
+  onOpenSeparateTab,
+}) {
   const itemRef = useRef(null)
   const trackRef = useRef(null)
   const videoRef = useRef(null)
@@ -14,7 +26,6 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
   const trackRectRef = useRef({ left: 0, top: 0, width: 1, height: 1 })
   const tiltTarget = useRef({ rotX: 0, rotY: 0, mouseX: 50, mouseY: 50 })
   const tiltCurrent = useRef({ rotX: 0, rotY: 0, mouseX: 50, mouseY: 50 })
-  const rafId = useRef(null)
   const moveFrameRef = useRef(0)
   const movePointRef = useRef({ x: 50, y: 50 })
   
@@ -158,6 +169,24 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
     }
   }, [])
 
+  const handleCardClick = (e) => {
+    // If clicked on popout button, let that handler deal with it
+    if (e.target.closest('.reel-card-popout-btn')) return
+    if (onOpenGallery) {
+      onOpenGallery(index)
+    }
+  }
+
+  const handlePopoutClick = (e) => {
+    e.stopPropagation()
+    if (onOpenSeparateTab) {
+      onOpenSeparateTab(id || index)
+    } else if (typeof window !== 'undefined') {
+      const videoParam = id || index
+      window.open(`/motion?video=${encodeURIComponent(videoParam)}`, '_blank', 'noopener,noreferrer')
+    }
+  }
+
   return (
     <div className={`reel-item reel-item--${direction > 0 ? 'right' : 'left'}`} ref={itemRef}>
       <div 
@@ -166,8 +195,13 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
         onMouseEnter={handleMouseEnter}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onClick={handleCardClick}
+        role="button"
+        tabIndex={0}
+        aria-label={`Play ${title} and view all motion videos`}
       >
         <div className="reel-spotlight" />
+
         <video
           className="reel-video"
           ref={videoRef}
@@ -184,6 +218,32 @@ function VideoCardComponent({ title, tag, webm, mp4, src, poster, direction = 1 
           {mp4 && <source src={mp4} type="video/mp4" />}
           {src && <source src={src} />}
         </video>
+
+        {/* Interactive Hover Action Overlay */}
+        <div className="reel-card-click-overlay">
+          <div className="reel-card-cta-group">
+            <button className="reel-card-play-btn" type="button" tabIndex={-1}>
+              <svg viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              <span>Play with Sound & Gallery</span>
+            </button>
+
+            <button
+              className="reel-card-popout-btn"
+              type="button"
+              onClick={handlePopoutClick}
+              title="Open in separate browser tab ↗"
+              aria-label="Open in separate tab"
+              tabIndex={-1}
+            >
+              <svg viewBox="0 0 24 24">
+                <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
         <div className="reel-caption">
           <span className="reel-title">{title}</span>
           <span className="reel-tag">{tag}</span>
