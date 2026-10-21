@@ -1,14 +1,22 @@
 import { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react'
 import './App.css'
+import './components/portfolio.css'
 import { ViewportProvider } from './context/ViewportContext'
-import Navbar from './components/Navbar'
-import HeroSection from './components/HeroSection'
-import ProjectCard from './components/ProjectCard'
-import VideoParallax from './components/VideoParallax'
+import BlogPage from './components/BlogPage'
 import MotionGallery from './components/MotionGallery'
+import AnimatedGridBackground from './components/AnimatedGridBackground'
+import Header from './components/Header'
+import HeroSection from './components/HeroSection'
+import ProjectsSection from './components/ProjectsSection'
+import MotionSection from './components/MotionSection'
+import VisualsSection from './components/VisualsSection'
 import AboutSection from './components/AboutSection'
 import ContactSection from './components/ContactSection'
-import BlogPage from './components/BlogPage'
+import Footer from './components/Footer'
+import AccentManager from './components/AccentManager'
+import SmoothScroll from './components/SmoothScroll'
+import DesignRuler from './components/DesignRuler'
+import LoadingScreen from './components/LoadingScreen'
 import adarsh from './assets/adarsh.jpeg'
 import adarsh1 from './assets/adarsh1.jpeg'
 
@@ -19,12 +27,11 @@ import mousiee from './assets/mousie.png'
 import cubed from './assets/cubed.png'
 import kinematicMovement from './assets/kinematic-movement.jpg'
 
-import finalFinalFinalWebm from './assets/FINALFINALFINAL.webm'
-import finalCompWebm from './assets/FinalComp.webm'
-import ntlTrailerWebm from './assets/ntlTrailer.webm'
+import nextTechLabWebm from './assets/next-tech-lab.webm'
+import arythmaticWebm from './assets/arythmatic.webm'
+import ntlTrailerWebm from './assets/ntl-trailer.webm'
 import backroomsWebm from './assets/backrooms.webm'
-import poster1Image from './assets/poster1.jpeg'
-import AnimatedGridBackground from './components/AnimatedGridBackground'
+import arythmaticPoster from './assets/arythmatic-poster.jpeg'
 
 const PHOTOS = Object.entries(
   import.meta.glob('./assets/photography/*.{jpg,jpeg,png,webp,avif,gif}', {
@@ -74,13 +81,13 @@ const PROJECTS = Object.freeze([
   { num:'06', type:'Gameplay Systems', title:'Kinematic Player Movement', desc:'A movement system using kinematic physics with variable gravity zones and jump height that changes based on button hold time. Added coyote time and input buffering for smoother, more responsive controls.', tags:['unity','c#','physics'], link:'#', linkLabel:'gameplay video', proj_screen: kinematicMovement },
 ])
 
-export const REEL = Object.freeze([
+const REEL = Object.freeze([
   {
     id: 'next-tech-lab-branding',
     num: '01',
     title: 'Next Tech Lab',
     tag: 'motion graphics',
-    webm: finalFinalFinalWebm,
+    webm: nextTechLabWebm,
     poster: '',
     desc: 'Kinetic typography, brand identity, and stylized 3D motion design created for Next Tech Lab. Dynamic camera tracking, rhythmic pacing, and high-energy motion aesthetics.',
     software: ['After Effects', 'Cinema 4D', 'Illustrator', 'Sound Design'],
@@ -90,8 +97,8 @@ export const REEL = Object.freeze([
     num: '02',
     title: 'Arythmatic',
     tag: 'motion graphics',
-    webm: finalCompWebm,
-    poster: poster1Image,
+    webm: arythmaticWebm,
+    poster: arythmaticPoster,
     desc: 'High-contrast abstract motion study exploring algorithmic typography, distortion displacement, chromatic aberration, and synchronized beat drops.',
     software: ['After Effects', 'Premiere Pro', 'Photoshop'],
   },
@@ -241,9 +248,31 @@ export default function App() {
     setDraggedPhotoId(null)
   }
 
+  const [activeAccentLabel, setActiveAccentLabel] = useState('core')
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const handleAccentChange = (e) => {
+      if (e.detail && e.detail.label) {
+        setActiveAccentLabel(e.detail.label)
+      }
+    }
+    window.addEventListener('accentchange', handleAccentChange)
+    return () => window.removeEventListener('accentchange', handleAccentChange)
+  }, [])
+
   return (
     <ViewportProvider>
+      {isLoading && (
+        <LoadingScreen
+          criticalAssets={[adarsh, adarsh1]}
+          onComplete={() => setIsLoading(false)}
+        />
+      )}
+      <SmoothScroll />
       <AnimatedGridBackground />
+      <DesignRuler activeSection={activeAccentLabel} />
+      <AccentManager />
 
       {routeState.page === 'blog' ? (
         <BlogPage onNavigateHome={navigateToHome} />
@@ -255,84 +284,60 @@ export default function App() {
           onNavigateToBlog={navigateToBlog}
         />
       ) : (
-        <>
-          <Navbar
-            onNavigateToBlog={navigateToBlog}
-            onNavigateToMotion={() => handleOpenGalleryModal(0)}
-            onNavigateHome={navigateToHome}
-          />
-
-          <HeroSection
-            primaryPhoto={adarsh}
-            secondaryPhoto={adarsh1}
-            onNavigateToBlog={navigateToBlog}
-          />
-
-          <div className="section" id="projects">
-            <div className="sec-head">
-              <span className="sec-num">01 — work</span>
-              <h2 className="sec-title">Things I've <em>Built</em></h2>
+        <div className="dvb-root">
+          <div className="dvb-page-grid">
+            {/* 4 Structural vertical guide lines */}
+            <div className="dvb-vertical-guides" aria-hidden="true">
+              <i className="dvb-v-line dvb-v-line--outer-l" />
+              <i className="dvb-v-line dvb-v-line--inner-l" />
+              <i className="dvb-v-line dvb-v-line--inner-r" />
+              <i className="dvb-v-line dvb-v-line--outer-r" />
             </div>
-            <div className="proj-list">
-              {PROJECTS.map(p => <ProjectCard key={p.num} {...p} />)}
-            </div>
-          </div>
 
-          <div className="section" id="motion">
-            <div className="sec-head">
-              <span className="sec-num">02 — motion</span>
-              <div className="sec-head-right">
-                <h2 className="sec-title">Motion & <em>Video</em></h2>
-                <span className="photos-hint">click to play with audio · full gallery</span>
-              </div>
-            </div>
-            <VideoParallax
-              items={REEL}
-              onOpenGallery={handleOpenGalleryModal}
-              onOpenSeparateTab={handleOpenSeparateTab}
+            {/* minimalist header */}
+            <Header
+              onNavigateToBlog={navigateToBlog}
+              onNavigateToMotion={() => handleOpenGalleryModal(0)}
+            />
+
+            <main>
+              {/* hero section */}
+              <HeroSection
+                primaryPhoto={adarsh}
+                onNavigateToBlog={navigateToBlog}
+              />
+
+              {/* 3-column project rows */}
+              <ProjectsSection projects={PROJECTS} />
+
+              {/* motion reel cards with instant cinema playback */}
+              <MotionSection
+                items={REEL}
+                onOpenGallery={handleOpenGalleryModal}
+              />
+
+              {/* visuals & photography masonry */}
+              <VisualsSection
+                photos={orderedPhotos}
+                draggedPhotoId={draggedPhotoId}
+                onDragStart={handleDragStart}
+                onDrop={handleDrop}
+                onDragEnd={() => setDraggedPhotoId(null)}
+              />
+
+              {/* about specs & story */}
+              <AboutSection />
+
+              {/* "let's talk." contact */}
+              <ContactSection />
+            </main>
+
+            {/* footer */}
+            <Footer
+              onNavigateToBlog={navigateToBlog}
+              onNavigateToMotion={() => handleOpenGalleryModal(0)}
             />
           </div>
-
-          <div className="section" id="photos">
-            <div className="sec-head">
-              <span className="sec-num">03 — photos</span>
-              <div className="sec-head-right">
-                <h2 className="sec-title">Photography</h2>
-                <span className="photos-hint">drag tiles to reorder</span>
-              </div>
-            </div>
-            <div className="photos-masonry">
-              {orderedPhotos.map((photo) => (
-                <figure
-                  className={`photo-tile${draggedPhotoId === photo.id ? ' photo-tile--dragging' : ''}`}
-                  key={photo.id}
-                  draggable
-                  onDragStart={handleDragStart(photo.id)}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={handleDrop(photo.id)}
-                  onDragEnd={() => setDraggedPhotoId(null)}
-                >
-                  <img
-                    src={photo.src}
-                    alt={photo.alt}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </figure>
-              ))}
-            </div>
-          </div>
-
-          <div className="info-grid">
-            <AboutSection />
-            <ContactSection />
-          </div>
-
-          <footer>
-            <span>howsillyistoosilly</span>
-            <span>© 2026</span>
-            <span>Adarsh Satish</span>
-          </footer>
 
           {/* Modal Theater Mode when clicking video from home */}
           {activeMotionModal.isOpen && (
@@ -346,7 +351,7 @@ export default function App() {
               onNavigateToBlog={navigateToBlog}
             />
           )}
-        </>
+        </div>
       )}
     </ViewportProvider>
   )

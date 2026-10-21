@@ -1,27 +1,70 @@
 import { memo } from 'react'
+import GridDivider from './GridDivider'
 
 function ContactSectionComponent() {
   return (
-    <div className="section" id="contact">
-        <div className="sec-head">
-          <span className="sec-num">05 — contact</span>
-          <h2 className="sec-title">Say <em>Hello</em></h2>
-        </div>
-        <div className="contact-wrap">
-          <div className="contact-left">
-            <p>want to collab on a jam, talk about games, or just say hi? always down.</p>
-            <div className="clinks">
-              <a className="clink" href="mailto:adarshsatish06@gmail.com">email</a>
-              <a className="clink" href="https://howsillyistoosilly.itch.io">itch.io</a>
-              <a className="clink" href="https://github.com/howsillyistoosilly">github</a>
-              <a className="clink" href="https://www.linkedin.com/in/adarsh-satish-050aa12b9/">linkedin</a>
-            </div>
-          </div>
-          <div className="contact-right">
-            <div className="contact-big">open to<br /><em>collabs &</em><br />game jams</div>
-          </div>
-        </div>
-    </div>
+    <section className="dvb-section" id="contact">
+      <GridDivider top />
+
+      <div className="dvb-sec-head">
+        <h2 className="dvb-sec-title">let's talk.</h2>
+        <p className="dvb-sec-desc">
+          bring what you're working on. open for collabs, game jams, or just a friendly chat.
+        </p>
+      </div>
+
+      <div className="dvb-contact-grid">
+        <a
+          href="mailto:adarshsatish06@gmail.com"
+          className="dvb-contact-card group"
+          aria-label="Send an email to Adarsh"
+        >
+          <span>email</span>
+          <svg width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M1 9L9 1M9 1H3M9 1V7" />
+          </svg>
+        </a>
+
+        <a
+          href="https://howsillyistoosilly.itch.io"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="dvb-contact-card group"
+          aria-label="Visit itch.io profile"
+        >
+          <span>itch.io</span>
+          <svg width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M1 9L9 1M9 1H3M9 1V7" />
+          </svg>
+        </a>
+
+        <a
+          href="https://github.com/howsillyistoosilly"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="dvb-contact-card group"
+          aria-label="Visit GitHub profile"
+        >
+          <span>github</span>
+          <svg width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M1 9L9 1M9 1H3M9 1V7" />
+          </svg>
+        </a>
+
+        <a
+          href="https://www.linkedin.com/in/adarsh-satish-050aa12b9/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="dvb-contact-card group"
+          aria-label="Visit LinkedIn profile"
+        >
+          <span>linkedin</span>
+          <svg width="12" height="12" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M1 9L9 1M9 1H3M9 1V7" />
+          </svg>
+        </a>
+      </div>
+    </section>
   )
 }
 

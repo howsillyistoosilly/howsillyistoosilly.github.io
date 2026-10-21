@@ -1,0 +1,89 @@
+/* ==========================================================================
+   Vertical Design Ruler - Seamlessly Blended on the RIGHT side
+   ========================================================================== */
+
+.vertical-ruler-wrap {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: auto;
+  width: 58px;
+  background: linear-gradient(270deg, rgba(14, 14, 14, 0.5) 0%, rgba(14, 14, 14, 0.15) 60%, transparent 100%);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: none;
+  z-index: 40;
+  user-select: none;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .vertical-ruler-wrap {
+    display: none;
+  }
+}
+
+.vertical-ruler-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Ruler Ticks along the right screen edge */
+.vertical-ruler-tick {
+  position: absolute;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
+.vertical-ruler-tick--min {
+  width: 7px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.vertical-ruler-tick--med {
+  width: 13px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.vertical-ruler-tick--major {
+  width: 21px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.vertical-ruler-tick-num {
+  position: absolute;
+  right: 25px;
+  top: -6px;
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: -0.02em;
+  transform-origin: right center;
+  line-height: 1;
+}
+
+/* Real-Time Cursor Hairline on the ruler */
+.vertical-ruler-cursor-marker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  pointer-events: none;
+  z-index: 10;
+  transition: top 0.03s linear;
+}
+
+.vertical-ruler-cursor-line {
+  position: absolute;
+  inset: 0;
+  height: 1.5px;
+  background: var(--accent-hex, #0D99FF);
+  box-shadow: 0 0 8px var(--accent-hex, #0D99FF);
+}

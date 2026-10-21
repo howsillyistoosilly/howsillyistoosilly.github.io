@@ -1,0 +1,33 @@
+/* ==========================================================================
+   Seamless ASCII Winking Cat Loader
+   No cards, no boxes, pure organic particle transition into UI
+   ========================================================================== */
+
+.dvb-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background-color: #0c0c0c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+  user-select: none;
+  font-family: var(--font-mono, 'DM Mono', monospace);
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
+}
+
+.dvb-loader-overlay--fade {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dvb-loader-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}

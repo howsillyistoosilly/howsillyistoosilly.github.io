@@ -70,8 +70,11 @@
   margin-left: -6px;
   top: -6px;
   color: rgba(255, 255, 255, 0.18);
-  pointer-events: none;
-  transition: color 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+  pointer-events: auto;
+  cursor: crosshair;
+  transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -93,11 +96,13 @@
     linear-gradient(currentColor, currentColor) 50% / 1px 100% no-repeat;
 }
 
-/* Wandering rose crosshair */
+/* Hover and proximity highlight */
+.grid-cross:hover,
 .grid-cross[data-rose] {
-  color: rgb(251, 44, 90) !important;
-  z-index: 2;
-  filter: drop-shadow(0 0 6px rgba(251, 44, 90, 0.65));
+  color: var(--accent-hex, #FB2C5A) !important;
+  z-index: 10;
+  transform: scale(1.35);
+  filter: drop-shadow(0 0 8px var(--accent-hex, #FB2C5A));
 }
 
 .grid-cross[data-rose="moved"] {

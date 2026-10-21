@@ -1,0 +1,128 @@
+/* ==========================================================================
+   Dynamic Section Accent Manager & Floating HUD "Thingy"
+   ========================================================================== */
+
+/* The floating pill indicator that fades and indicates active section color */
+.dvb-accent-hud {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 9999px;
+  background: rgba(18, 18, 18, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: rgb(var(--dvb-fg) / 0.85);
+  user-select: none;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+              border-color 0.4s ease,
+              box-shadow 0.4s ease;
+}
+
+.dvb-accent-hud:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.7);
+}
+
+/* Glowing accent dot */
+.dvb-accent-hud-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dvb-accent-hud-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  background: inherit;
+  opacity: 0.35;
+  animation: hud-dot-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes hud-dot-pulse {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0.6;
+  }
+}
+
+/* Text label that fades on change */
+.dvb-accent-hud-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.dvb-accent-hud-text--fading {
+  opacity: 0;
+  transform: translateY(3px);
+}
+
+.dvb-accent-hud-name {
+  color: rgb(var(--dvb-fg));
+}
+
+.dvb-accent-hud-hex {
+  color: rgb(var(--dvb-fg) / 0.45);
+  font-size: 11px;
+}
+
+/* Section dot navigation inside HUD expansion (optional compact indicators) */
+.dvb-accent-pips {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 2px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dvb-accent-pip {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.dvb-accent-pip--active {
+  transform: scale(1.4);
+}
+
+@media (max-width: 640px) {
+  .dvb-accent-hud {
+    bottom: 16px;
+    right: 16px;
+    padding: 6px 11px 6px 9px;
+    font-size: 11px;
+  }
+  .dvb-accent-hud-hex {
+    display: none;
+  }
+}
