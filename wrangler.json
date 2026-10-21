@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "howsillyistoosilly",
+  "compatibility_date": "2024-11-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [
+    {
+      "pattern": "howsillyistoosilly.lol/*",
+      "zone_name": "howsillyistoosilly.lol"
+    },
+    {
+      "pattern": "www.howsillyistoosilly.lol/*",
+      "zone_name": "howsillyistoosilly.lol"
+    }
+  ]
+}
