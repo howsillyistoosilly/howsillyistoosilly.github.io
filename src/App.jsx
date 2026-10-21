@@ -24,9 +24,7 @@ import finalCompWebm from './assets/FinalComp.webm'
 import ntlTrailerWebm from './assets/ntlTrailer.webm'
 import backroomsWebm from './assets/backrooms.webm'
 import poster1Image from './assets/poster1.jpeg'
-
-// Lazy load heavy Three.js / R3F Canvas components with Suspense
-const PixelTrail = lazy(() => import('./components/PixelTrail'))
+import AnimatedGridBackground from './components/AnimatedGridBackground'
 
 const PHOTOS = Object.entries(
   import.meta.glob('./assets/photography/*.{jpg,jpeg,png,webp,avif,gif}', {
@@ -245,15 +243,7 @@ export default function App() {
 
   return (
     <ViewportProvider>
-      <Suspense fallback={null}>
-        <PixelTrail
-          gridSize={120}
-          trailSize={0.03}
-          maxAge={300}
-          interpolate={8}
-          color="#f0f0f0"
-        />
-      </Suspense>
+      <AnimatedGridBackground />
 
       {routeState.page === 'blog' ? (
         <BlogPage onNavigateHome={navigateToHome} />

@@ -1,0 +1,126 @@
+.animated-grid-bg-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.animated-grid-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Structural vertical guidelines inspired by notdvb.com */
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.grid-guide-frame {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  height: 100%;
+  margin: 0 auto;
+}
+
+/* Vertical guide lines */
+.grid-v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.grid-v-outer {
+  opacity: 0.4;
+}
+
+/* Horizontal section rules with gradient fade at ends */
+.grid-rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.07) 15%,
+    rgba(255, 255, 255, 0.07) 85%,
+    transparent 100%
+  );
+}
+
+/* Intersection Crosshairs (+) */
+.grid-cross {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  margin-left: -6px;
+  top: -6px;
+  color: rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+  transition: color 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-cross::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: #111111;
+}
+
+.grid-cross::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(currentColor, currentColor) 50% / 100% 1px no-repeat,
+    linear-gradient(currentColor, currentColor) 50% / 1px 100% no-repeat;
+}
+
+/* Wandering rose crosshair */
+.grid-cross[data-rose] {
+  color: rgb(251, 44, 90) !important;
+  z-index: 2;
+  filter: drop-shadow(0 0 6px rgba(251, 44, 90, 0.65));
+}
+
+.grid-cross[data-rose="moved"] {
+  animation: grid-cross-pop 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@keyframes grid-cross-pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-v-outer {
+    display: none;
+  }
+}

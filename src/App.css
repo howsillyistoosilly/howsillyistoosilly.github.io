@@ -71,13 +71,13 @@ nav a:hover {
   z-index: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border-bottom: 1px solid rgba(255, 245, 245, 0.888);
+  border-bottom: 1px solid var(--line);
   min-height: 82vh;
 }
 
 .hero-left {
   padding: 4rem 3rem;
-  border-right: 1px solid var(--fg);
+  border-right: 1px solid var(--line);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -338,7 +338,7 @@ nav a:hover {
   position: relative;
   z-index: 1;
   padding: 4rem 3rem;
-  border-bottom: 1px solid rgba(250, 250, 250, 0.955);
+  border-bottom: 1px solid var(--line);
   content-visibility: auto;
   contain-intrinsic-size: 900px;
 }
