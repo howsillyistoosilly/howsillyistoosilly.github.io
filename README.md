@@ -1,36 +1,28 @@
 # howsillyistoosilly — portfolio
 
-## setup
+Portfolio and blog built with Preact, Vite, and Sanity. The UI uses Preact's React compatibility layer for Portable Text and existing component APIs. Blog and motion routes are loaded only when visited.
+
+## Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-## build for production
+## Production
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## adding screenshots
+## Sanity Studio
 
-In `src/App.jsx`, find the project you want and replace the `proj-screen` div contents with:
-
-```jsx
-<div className="proj-screen">
-  <img src="/screenshots/your-image.png" alt="project name" />
-</div>
+```bash
+npm run studio
+npm run build:studio
 ```
 
-Put your images in `public/screenshots/`.
+Set `VITE_SANITY_PROJECT_ID`, `VITE_SANITY_DATASET`, and `VITE_SANITY_API_VERSION` in `.env.local` to override the default Sanity project settings.
 
-## tweaking the pixel trail
-
-In `src/App.jsx`, find `<PixelTrail` and adjust:
-
-- `gridSize` — pixel square size (higher = smaller squares)
-- `trailSize` — brush radius (0.05–0.3)
-- `maxAge` — how long trail stays (ms)
-- `color` — trail color (currently `#0a0a0a`)
+Project data and the home page sections are defined in `src/App.jsx`. Project screenshots live in `src/assets/`.

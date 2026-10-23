@@ -12,11 +12,9 @@ function VisualsSectionComponent({
     <section className="dvb-section" id="photos">
       <GridDivider top />
 
-      <div className="dvb-sec-head">
+      <div className="dvb-sec-head dvb-photo-head">
         <h2 className="dvb-sec-title">visuals.</h2>
-        <p className="dvb-sec-desc">
-          moments captured through the lens. drag and rearrange any photo tile.
-        </p>
+        <p className="dvb-sec-desc">photography · drag to rearrange</p>
       </div>
 
       <div className="dvb-photo-grid">

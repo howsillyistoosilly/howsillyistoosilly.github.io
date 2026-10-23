@@ -750,8 +750,8 @@
    ========================================================================== */
 .dvb-motion-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .dvb-motion-card {
@@ -759,10 +759,15 @@
   background: rgb(var(--dvb-surface-card));
   border: 1px solid rgb(var(--dvb-fg) / 0.06);
   border-top: 2.5px solid rgb(var(--dvb-rose) / 0.35);
-  padding: 14px;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  background: #050505;
   display: flex;
   flex-direction: column;
-  gap: 12px;
   cursor: pointer;
   transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: left;
@@ -778,8 +783,8 @@
 
 .dvb-motion-preview {
   width: 100%;
-  height: 160px;
-  border-radius: 10px;
+  height: 100%;
+  border-radius: inherit;
   overflow: hidden;
   background: #000;
   position: relative;
@@ -791,6 +796,12 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.dvb-motion-card:hover .dvb-motion-preview video {
+  transform: scale(1.035);
+  opacity: 0.78;
 }
 
 .dvb-motion-play-badge {
@@ -817,14 +828,20 @@
 }
 
 .dvb-motion-info {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 5px;
+  padding: 42px 16px 15px;
+  background: linear-gradient(0deg, rgb(0 0 0 / 0.86), transparent);
+  pointer-events: none;
 }
 
 .dvb-motion-title {
-  font-size: 16px;
+  font-size: clamp(15px, 2vw, 19px);
   font-weight: 700;
   letter-spacing: -0.03em;
   color: rgb(var(--dvb-fg));
@@ -835,27 +852,35 @@
   font-size: 11px;
   font-weight: 500;
   color: rgb(var(--dvb-fg) / 0.5);
-  margin-top: 2px;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 /* ==========================================================================
    Photography Masonry
    ========================================================================== */
 .dvb-photo-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  columns: 4 190px;
+  column-gap: 14px;
 }
 
-@media (max-width: 600px) {
-  .dvb-photo-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.dvb-section#photos {
+  width: min(100vw, 1440px);
+  margin-left: calc(50% - min(50vw, 720px));
+  padding: 36px clamp(20px, 5vw, 72px);
+}
+
+.dvb-photo-head {
+  margin-bottom: 28px;
 }
 
 .dvb-photo-item {
-  aspect-ratio: 4 / 3;
-  border-radius: 10px;
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 14px;
+  border-radius: 12px;
+  break-inside: avoid;
   overflow: hidden;
   border: 1px solid rgb(var(--dvb-fg) / 0.08);
   background: #000;
@@ -873,9 +898,17 @@
 
 .dvb-photo-item img {
   width: 100%;
-  height: 100%;
+  height: auto;
   object-fit: cover;
   display: block;
+}
+
+@media (max-width: 640px) {
+  .dvb-motion-grid { grid-template-columns: 1fr; }
+  .dvb-motion-card { aspect-ratio: 16 / 9; }
+  .dvb-section#photos { padding-inline: 16px; }
+  .dvb-photo-grid { columns: 2 130px; column-gap: 9px; }
+  .dvb-photo-item { margin-bottom: 9px; border-radius: 9px; }
 }
 
 /* ==========================================================================

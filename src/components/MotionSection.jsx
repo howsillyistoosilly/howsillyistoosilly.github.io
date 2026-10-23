@@ -8,9 +8,7 @@ function MotionSectionComponent({ items = [], onOpenGallery }) {
 
       <div className="dvb-sec-head">
         <h2 className="dvb-sec-title">motion.</h2>
-        <p className="dvb-sec-desc">
-          3D animations, brand identities, and kinetic typography. click any project to view with sound.
-        </p>
+        <p className="dvb-sec-desc">selected films · click to watch</p>
       </div>
 
       <div className="dvb-motion-grid">
@@ -53,30 +51,8 @@ function MotionSectionComponent({ items = [], onOpenGallery }) {
             </div>
 
             <div className="dvb-motion-info">
-              <div>
-                <h3 className="dvb-motion-title">{item.title}</h3>
-                <div className="dvb-motion-tag">{item.tag}</div>
-              </div>
-
-              <span className="btn" style={{ padding: '6px 10px', fontSize: '12px' }}>
-                <span>play</span>
-                <svg
-                  width="9"
-                  height="9"
-                  viewBox="0 0 10 10"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M1 9L9 1M9 1H3M9 1V7"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
+              <span className="dvb-motion-tag">{item.tag}</span>
+              <h3 className="dvb-motion-title">{item.title}</h3>
             </div>
           </div>
         ))}

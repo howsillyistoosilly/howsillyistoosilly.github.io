@@ -1,22 +1,33 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 html {
-  background: #0E0E0E;
+  background: var(--theme-bg);
   scroll-behavior: auto !important;
 }
 
 :root {
-  --bg: #111111;
-  --fg: #f0f0f0;
-  --mid: #888888;
-  --line: rgba(255,255,255,.07);
-  --grid: rgba(255,255,255,.05);
+  color-scheme: dark;
+  --theme-bg: #0e0e0e;
+  --theme-surface: #111111;
+  --theme-raised: #141414;
+  --theme-deep: #080808;
+  --theme-fg: #f7f7f7;
+  --theme-muted: #888888;
+  --theme-line: rgba(255, 255, 255, 0.08);
+  --theme-accent: #fb2c5a;
+  --theme-accent-rgb: 251 44 90;
+  --bg: var(--theme-bg);
+  --fg: var(--theme-fg);
+  --mid: var(--theme-muted);
+  --line: var(--theme-line);
+  --grid: rgba(255, 255, 255, 0.05);
 }
 
 body {
-  background: #111111;
-  color: #f0f0f0;
-  font-family: 'DM Mono', monospace;
+  min-width: 320px;
+  background: var(--theme-bg);
+  color: var(--theme-fg);
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   overflow-x: hidden;
   overscroll-behavior-y: none;
 }

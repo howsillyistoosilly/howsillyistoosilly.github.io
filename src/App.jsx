@@ -1,9 +1,8 @@
 import { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react'
 import './App.css'
 import './components/portfolio.css'
-import { ViewportProvider } from './context/ViewportContext'
-import BlogPage from './components/BlogPage'
-import MotionGallery from './components/MotionGallery'
+const BlogPage = lazy(() => import('./components/BlogPage'))
+const MotionGallery = lazy(() => import('./components/MotionGallery'))
 import AnimatedGridBackground from './components/AnimatedGridBackground'
 import Header from './components/Header'
 import HeroSection from './components/HeroSection'
@@ -193,15 +192,6 @@ export default function App() {
     }
   }, [])
 
-  const navigateToMotion = useCallback((videoIdOrIndex = 0) => {
-    if (typeof window !== 'undefined') {
-      const videoParam = typeof videoIdOrIndex === 'string' ? videoIdOrIndex : (REEL[videoIdOrIndex]?.id || '0')
-      window.history.pushState({}, '', `/motion?video=${encodeURIComponent(videoParam)}`)
-      setRouteState({ page: 'motion', param: videoParam })
-      window.scrollTo({ top: 0, behavior: 'instant' })
-    }
-  }, [])
-
   const handleOpenGalleryModal = useCallback((indexOrId) => {
     const idx = typeof indexOrId === 'number' ? indexOrId : REEL.findIndex(v => v.id === indexOrId)
     const validIdx = idx !== -1 ? idx : 0
@@ -215,13 +205,6 @@ export default function App() {
       const cleanUrl = new URL(window.location.href)
       cleanUrl.searchParams.delete('video')
       window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.hash)
-    }
-  }, [])
-
-  const handleOpenSeparateTab = useCallback((videoIdOrIndex) => {
-    const videoParam = typeof videoIdOrIndex === 'string' ? videoIdOrIndex : (REEL[videoIdOrIndex]?.id || videoIdOrIndex)
-    if (typeof window !== 'undefined') {
-      window.open(`/motion?video=${encodeURIComponent(videoParam)}`, '_blank', 'noopener,noreferrer')
     }
   }, [])
 
@@ -262,7 +245,7 @@ export default function App() {
   }, [])
 
   return (
-    <ViewportProvider>
+    <>
       {isLoading && (
         <LoadingScreen
           criticalAssets={[adarsh, adarsh1]}
@@ -270,10 +253,11 @@ export default function App() {
         />
       )}
       <SmoothScroll />
-      <AnimatedGridBackground />
-      <DesignRuler activeSection={activeAccentLabel} />
-      <AccentManager />
+      {routeState.page === 'home' && <AnimatedGridBackground />}
+      {routeState.page === 'home' && <DesignRuler activeSection={activeAccentLabel} />}
+      {routeState.page === 'home' && <AccentManager />}
 
+      <Suspense fallback={null}>
       {routeState.page === 'blog' ? (
         <BlogPage onNavigateHome={navigateToHome} />
       ) : routeState.page === 'motion' ? (
@@ -353,7 +337,8 @@ export default function App() {
           )}
         </div>
       )}
-    </ViewportProvider>
+      </Suspense>
+    </>
   )
 }
 

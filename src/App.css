@@ -13,10 +13,10 @@
 }
 
 :root {
-  --bg: #111111;
-  --fg: #ffffff;
-  --mid: #888888;
-  --line: rgba(255, 255, 255, 0.08);
+  --bg: var(--theme-bg);
+  --fg: var(--theme-fg);
+  --mid: var(--theme-muted);
+  --line: var(--theme-line);
 }
 
 body {

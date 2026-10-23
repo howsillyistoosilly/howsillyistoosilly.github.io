@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import preact from '@preact/preset-vite'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [preact()],
   assetsInclude: ['**/*.glb', '**/*.mkv'],
   esbuild: {
     drop: ['console', 'debugger'], // Strip debug console statements in production builds
@@ -24,17 +24,14 @@ export default defineConfig({
             if (id.includes('three')) {
               return 'vendor-three'
             }
-            if (id.includes('@react-three')) {
-              return 'vendor-r3f'
-            }
             if (id.includes('lenis')) {
               return 'vendor-lenis'
             }
             if (id.includes('@sanity') || id.includes('@portabletext')) {
               return 'vendor-sanity'
             }
-            if (id.includes('react')) {
-              return 'vendor-react'
+            if (id.includes('preact')) {
+              return 'vendor-preact'
             }
           }
         },
