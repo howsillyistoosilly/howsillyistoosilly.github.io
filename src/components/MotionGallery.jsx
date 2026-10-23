@@ -80,10 +80,10 @@ export function MotionGalleryComponent({
     }
 
     if (activeVideo.title) {
-      document.title = `${activeVideo.title} — Motion & Video Reel`
+      document.title = `${activeVideo.title} — howsillyistoosilly`
     }
     return () => {
-      document.title = 'howsillyistoosilly — portfolio & blog'
+      document.title = 'howsillyistoosilly'
     }
   }, [activeIndex, activeVideo, isModal])
 

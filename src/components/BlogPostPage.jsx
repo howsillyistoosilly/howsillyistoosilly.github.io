@@ -104,12 +104,12 @@ function BlogPostPageComponent({ slug, initialPost, onBackToFeed, onNavigateHome
   // Update dynamic page title when post loads
   useEffect(() => {
     if (post?.title) {
-      document.title = `${post.title} — blog.howsillyistoosilly.lol`
+      document.title = `${post.title} — howsillyistoosilly`
     } else {
-      document.title = 'howsillyistoosilly — devlogs'
+      document.title = 'howsillyistoosilly'
     }
     return () => {
-      document.title = 'howsillyistoosilly — portfolio & blog'
+      document.title = 'howsillyistoosilly'
     }
   }, [post])
 

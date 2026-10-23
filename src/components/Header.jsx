@@ -4,8 +4,8 @@ function HeaderComponent({ onNavigateToBlog, onNavigateToMotion }) {
   return (
     <header className="dvb-header">
       <a href="/" className="dvb-logo" aria-label="howsillyistoosilly">
-        <span className="dvb-logo-mark">as</span>
-        <span>@howsillyistoosilly</span>
+        <img className="dvb-logo-mark" src="/silly-cat.svg" alt="" />
+        <span>howsillyistoosilly</span>
       </a>
 
       <nav className="dvb-nav-pills" aria-label="Social and page links">
